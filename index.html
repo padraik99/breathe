@@ -52,25 +52,26 @@
   /* ---------- home ---------- */
   .brow{display:flex;justify-content:space-between;align-items:baseline;flex:0 0 auto;}
   .mark{font:400 15px/1 ui-serif,Georgia,"Times New Roman",serif;letter-spacing:.34em;
-    text-transform:uppercase;color:var(--dim);}
-  .gear{font-size:19px;color:var(--dim);padding:2px 6px;cursor:pointer;line-height:1;}
+    text-transform:uppercase;color:rgba(232,238,245,.60);}
+  .gear{font-size:20px;color:rgba(232,238,245,.60);padding:2px 6px;cursor:pointer;line-height:1;}
 
   .filters{display:flex;gap:20px;margin:26px 0 4px;flex:0 0 auto;}
   .filters span{font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;
-    color:var(--dimmer);padding:5px 0;cursor:pointer;transition:color .35s;}
-  .filters span.on{color:var(--ink);}
+    color:rgba(232,238,245,.58);padding:5px 0 7px;cursor:pointer;
+    border-bottom:1px solid transparent;transition:color .35s,border-color .35s;}
+  .filters span.on{color:var(--ink);border-bottom-color:rgba(127,227,212,.65);}
 
   .list{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;
     margin-top:8px;padding-bottom:8px;mask-image:linear-gradient(180deg,transparent 0,#000 16px,#000 calc(100% - 22px),transparent 100%);}
   .row{padding:15px 0;border-bottom:1px solid var(--line);cursor:pointer;
-    opacity:.5;transition:opacity .4s;}
+    opacity:.66;transition:opacity .4s;}
   .row.on{opacity:1;}
   .row .nm{font:400 27px/1.15 ui-serif,Georgia,"Times New Roman",serif;letter-spacing:.005em;}
   .row .rh{margin-top:6px;font-size:12.5px;letter-spacing:.09em;color:var(--dim);
     font-variant-numeric:tabular-nums;}
   .row .why{max-height:0;overflow:hidden;opacity:0;
     transition:max-height .5s ease,opacity .4s ease,margin .5s ease;}
-  .row.on .why{max-height:360px;opacity:1;margin-top:10px;}
+  .row.on .why{max-height:620px;opacity:1;margin-top:10px;}
   .row .why p{margin:0;font-size:13.5px;line-height:1.55;color:var(--dim);max-width:34em;}
   .tagline{display:inline-block;margin-top:8px;font-size:10.5px;letter-spacing:.14em;
     text-transform:uppercase;color:var(--accent);opacity:.75;}
@@ -78,8 +79,8 @@
   .foot{flex:0 0 auto;padding-top:16px;}
   .dur{display:flex;align-items:center;gap:0;margin-bottom:20px;}
   .dur b{font:400 12px/1 system-ui;letter-spacing:.16em;text-transform:uppercase;
-    color:var(--dimmer);margin-right:16px;}
-  .dur i{font-style:normal;font-size:16px;color:var(--dimmer);padding:8px 12px;cursor:pointer;
+    color:rgba(232,238,245,.42);margin-right:16px;}
+  .dur i{font-style:normal;font-size:16px;color:rgba(232,238,245,.55);padding:8px 12px;cursor:pointer;
     font-variant-numeric:tabular-nums;transition:color .3s;}
   .dur i.on{color:var(--ink);}
   .dur i:first-of-type{padding-left:0;}
@@ -90,13 +91,22 @@
   .go:active{background:rgba(127,227,212,.14);}
 
   .stats{display:flex;justify-content:space-between;align-items:center;margin-top:14px;
-    font-size:11.5px;letter-spacing:.1em;color:var(--dimmer);font-variant-numeric:tabular-nums;}
+    font-size:11.5px;letter-spacing:.1em;color:rgba(232,238,245,.46);font-variant-numeric:tabular-nums;}
 
   /* ---------- session ---------- */
   #sess{justify-content:flex-end;align-items:center;}
   #count{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
     font:200 96px/1 ui-serif,Georgia,serif;color:var(--ink);opacity:0;pointer-events:none;
     font-variant-numeric:tabular-nums;}
+  #ptimer{position:fixed;left:0;right:0;bottom:calc(var(--safe-b) + 74px);text-align:center;
+    font:200 40px/1 ui-serif,Georgia,serif;color:rgba(232,238,245,.30);
+    font-variant-numeric:tabular-nums;pointer-events:none;opacity:0;transition:opacity .6s;}
+  #ptimer.show{opacity:1;}
+  #ptimer i{display:block;font-style:normal;font-size:11px;letter-spacing:.22em;
+    text-transform:uppercase;color:rgba(232,238,245,.20);margin-top:9px;}
+  .warn{margin-top:12px;padding:13px 15px;border:1px solid rgba(255,170,120,.28);
+    border-radius:12px;background:rgba(255,150,90,.05);
+    font-size:12px;line-height:1.55;color:rgba(255,196,150,.72);}
   #chrome{opacity:0;transition:opacity .5s;text-align:center;}
   #chrome.show{opacity:1;}
   #stop{font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--dim);
@@ -118,12 +128,14 @@
   #set{background:rgba(3,5,9,.9);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);
     overflow-y:auto;}
   #set h4{font:400 12px/1 system-ui;letter-spacing:.2em;text-transform:uppercase;
-    color:var(--dimmer);margin:28px 0 14px;}
+    color:rgba(232,238,245,.44);margin:28px 0 14px;}
   .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  .opt{padding:16px 14px;border:1px solid var(--line);border-radius:14px;cursor:pointer;
-    font-size:14px;color:var(--dim);transition:all .3s;}
+  .opt{padding:16px 14px;border:1px solid rgba(232,238,245,.20);border-radius:14px;
+    cursor:pointer;font-size:14px;color:rgba(232,238,245,.68);transition:all .3s;}
   .opt.on{border-color:rgba(127,227,212,.5);color:var(--ink);background:rgba(127,227,212,.06);}
-  .opt small{display:block;margin-top:5px;font-size:11px;color:var(--dimmer);letter-spacing:.02em;}
+  .opt.wide{grid-column:1 / -1;}
+  .opt small{display:block;margin-top:5px;font-size:11px;
+    color:rgba(232,238,245,.44);letter-spacing:.02em;}
   input[type=range]{width:100%;accent-color:var(--accent);margin-top:6px;}
   .badges{display:flex;flex-wrap:wrap;gap:9px;margin-top:4px;}
   .badge{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;
@@ -152,6 +164,7 @@
     <span data-f="sleep">Sleep</span>
     <span data-f="stress">Stress</span>
     <span data-f="focus">Focus</span>
+    <span data-f="dive">Dive</span>
   </div>
 
   <div class="list" id="list"></div>
@@ -167,6 +180,7 @@
   <div id="chrome"><div id="stop">End</div></div>
 </div>
 <div id="count"></div>
+<div id="ptimer"></div>
 <div id="bar"></div>
 
 <div class="screen hide" id="done">
@@ -188,8 +202,9 @@
     <div class="opts" id="visOpts"></div>
     <h4>Voice</h4>
     <div class="opts" id="timbreOpts"></div>
-    <h4>Layers</h4>
+    <h4>Background</h4>
     <div class="opts" id="layerOpts"></div>
+    <div class="opts" id="metroOpt" style="margin-top:10px"></div>
     <h4>Volume</h4>
     <div><input type="range" id="vol" min="0" max="100" value="70"></div>
     <h4>Milestones</h4>
@@ -213,6 +228,34 @@
 
 /* ============================ PATTERNS ============================ */
 /* phases: t = in | in2 | hold | out | holdout ; s = seconds ; to = lung fullness target */
+/* --- freediving tables. calm breathe-up, never hyperventilation. --- */
+function slowCycles(n){
+  var p=[]; for(var i=0;i<n;i++){ p.push({t:'in',s:4,to:1}); p.push({t:'out',s:6,to:0}); }
+  return p;
+}
+function co2Table(){
+  var p = slowCycles(4);                       // breathe-up
+  var rests=[90,75,60,50,40,30];               // the rest shrinks, the hold does not
+  for(var r=0;r<rests.length;r++){
+    p = p.concat(slowCycles(Math.round(rests[r]/10)));
+    p.push({t:'in',s:4,to:1});
+    p.push({t:'hold',s:40});
+    p.push({t:'out',s:5,to:0});
+  }
+  return p;
+}
+function o2Table(){
+  var p = slowCycles(6);
+  var holds=[30,40,50,60,70];                  // the hold grows, the rest does not
+  for(var h=0;h<holds.length;h++){
+    p.push({t:'in',s:4,to:1});
+    p.push({t:'hold',s:holds[h]});
+    p.push({t:'out',s:5,to:0});
+    if(h<holds.length-1) p = p.concat(slowCycles(9));
+  }
+  return p;
+}
+
 function sharpResetPhases(){
   var p=[];
   for(var i=0;i<15;i++){ p.push({t:'out',s:0.55,to:0.12}); p.push({t:'in',s:0.85,to:0.86}); }
@@ -248,27 +291,41 @@ var PATTERNS = [
     rhythm:'4 · 4 · 4 · 4', rate:'3.75 breaths / min', badge:'Something to hold onto',
     why:'The square. It moves heart-rate variability less than resonance breathing does, but the symmetry gives a racing mind a shape to follow, which is worth more than a few milliseconds of RMSSD when you are too wound up to count anything subtler. A steadier, not a sedative.' },
 
-  { id:'charge', name:'Charge', tags:['focus'],
-    phases:[{t:'in',s:3,to:1},{t:'out',s:1.6,to:0}],
-    rhythm:'3 in · 1.6 out', rate:'13 breaths / min', badge:'Arousal up, not down',
-    why:'Every other pattern here weights the exhale, because vagal outflow to the heart rises as you breathe out. Charge inverts it — the long inhale is the sympathetic side of the same lever, run fast. Paced-breathing research is clear that faster breathing raises felt arousal; it is honest to say the same work found no reliable gain in motor accuracy or reaction time, so treat this as a way to get up, not a performance guarantee. Two to three minutes is plenty.' },
-
   { id:'reset', name:'Sharp Reset', tags:['focus'], phases:sharpResetPhases(),
     rhythm:'15 sharp exhales · then settle', rate:'≈40/min, then easy', badge:'Snap back to the moment',
-    why:'Fifteen short forceful exhales through the nose with a passive inhale between — kapalabhati — then the breath settles for three slow cycles. The forced exhale is the piece with athletic support: in collegiate tennis players, forced exhalation and grunting recruited the anterior deltoid and obliques more than a Valsalva, and grunting out-produced forced inhalation for force. A trial of kapalabhati found working-memory accuracy improved right after practice, though reaction time lengthened. Stop if you feel light-headed — that is the CO₂ dropping, not progress.' }
+    why:'Fifteen short forceful exhales through the nose with a passive inhale between — kapalabhati — then the breath settles for three slow cycles. The forced exhale is the piece with athletic support: in collegiate tennis players, forced exhalation and grunting recruited the anterior deltoid and obliques more than a Valsalva, and grunting out-produced forced inhalation for force. A trial of kapalabhati found working-memory accuracy improved right after practice, though reaction time lengthened. Stop if you feel light-headed — that is the CO₂ dropping, not progress.' },
+
+  { id:'co2', name:'CO₂ Table', tags:['dive'], phases:co2Table(), once:true, timer:true,
+    rhythm:'6 holds of 40s · rest shrinks 90s→30s', rate:'about 11 minutes', badge:'Trains air hunger',
+    why:'The hold stays the same length while the rest between holds gets shorter, so each hold starts with more CO₂ still in you. What you are training is tolerance of the urge to breathe — that urge is a CO₂ signal, not an oxygen one. In apnea novices, CO₂ tables dropped oxygen saturation only about 6% against 16% for maximal breath-holds, which is what makes them the gentler way in. The breathe-up here is slow and deliberate on purpose: it is not hyperventilation, and it must never become it.' },
+
+  { id:'o2', name:'O₂ Table', tags:['dive'], phases:o2Table(), once:true, timer:true,
+    rhythm:'5 holds · 30s→70s · 90s recovery', rate:'about 12 minutes', badge:'Trains low oxygen',
+    why:'The rest stays fixed while the holds lengthen, pushing a little further into hypoxia each round. Two weeks of daily dry apnea work is enough to sharpen the diving response — stronger bradycardia, spleen contraction adding red cells to circulation — and eight weeks raises resting spleen volume. Worth knowing the honest finding: for beginners, tables did not produce deeper hypoxia than plain maximal holds, so their value is structure and safety, not intensity. Stop any hold whenever you want; the table is a suggestion, not a target.' }
 ];
 
 var DURATIONS = [5,10,15,20,30];
+
+var DIVE_WARNING = 'On land only. Sit or lie down, never in or near water — hypoxic blackout '+
+  'arrives without warning and there is no self-rescue from it. The breathe-up is slow and calm; '+
+  'hyperventilating first is what makes breath-holding lethal, because it removes the CO₂ that '+
+  'would otherwise make you breathe before your oxygen runs out. Let your breathing return to '+
+  'normal between rounds, skip this after hard exercise, and end any hold the moment you want to.';
 
 /* ============================ STATE ============================ */
 var LS = 'breathe.v1';
 var store = load();
 function load(){
   var d = {totalSec:0, days:{}, streak:0, last:'', ms:[], vis:'jelly',
-           snd:true, timbre:'bowls', drone:true, metro:false, vol:.7,
+           timbre:'bowls', bed:'drone', metro:false, vol:.7,
            pat:'resonance', dur:5};
   try{ var r = JSON.parse(localStorage.getItem(LS)||'{}');
-       for(var k in r) d[k]=r[k]; }catch(e){}
+       for(var k in r) d[k]=r[k];
+       if(r.snd===false && r.timbre===undefined){ d.timbre='none'; d.bed='off'; }
+       if(typeof r.drone==='boolean' && r.bed===undefined) d.bed = r.drone?'drone':'off';
+       if(d.timbre==='ocean') d.timbre='breath';
+  }catch(e){}
+  delete d.snd; delete d.drone;
   return d;
 }
 function save(){ try{ localStorage.setItem(LS, JSON.stringify(store)); }catch(e){} }
@@ -283,13 +340,17 @@ var filter = 'all';
 var A = null, master=null, verb=null, drone=null, droneGain=null, droneFilt=null,
     silentEl=null, noiseBuf=null;
 
+/* A real room swallows treble faster than bass, so the impulse is progressively
+   low-passed as it decays. Each channel gets its own noise for a wide tail. */
 function makeVerb(ctx){
-  var len = Math.floor(ctx.sampleRate*4.6), buf = ctx.createBuffer(2,len,ctx.sampleRate);
+  var len = Math.floor(ctx.sampleRate*5.5), buf = ctx.createBuffer(2,len,ctx.sampleRate);
   for(var c=0;c<2;c++){
-    var d = buf.getChannelData(c);
+    var d = buf.getChannelData(c), lp=0;
     for(var i=0;i<len;i++){
       var t = i/len;
-      d[i] = (Math.random()*2-1) * Math.pow(1-t,2.3) * (i<ctx.sampleRate*0.014?0.25:1);
+      var damp = 0.35 - 0.30*t;                    // treble dies away with time
+      lp += (Math.random()*2-1 - lp) * Math.max(0.02, damp);
+      d[i] = lp * Math.pow(1-t, 2.1) * (i < ctx.sampleRate*0.018 ? 0.22 : 1) * 2.4;
     }
   }
   var cv = ctx.createConvolver(); cv.buffer = buf; return cv;
@@ -306,9 +367,15 @@ function initAudio(){
   if(A) { if(A.state==='suspended') A.resume(); return; }
   var C = window.AudioContext||window.webkitAudioContext;
   if(!C) return;
-  A = new C();
+  /* ask for 48 kHz; devices that will not give it fall back to their own rate */
+  try{ A = new C({sampleRate:48000, latencyHint:'playback'}); }catch(e){ A = new C(); }
   try{ if(navigator.audioSession) navigator.audioSession.type='playback'; }catch(e){}
-  master = A.createGain(); master.gain.value = store.vol; master.connect(A.destination);
+  /* a gentle limiter so overlapping rings never clip into fizz */
+  var lim = A.createDynamicsCompressor();
+  lim.threshold.value=-6; lim.knee.value=14; lim.ratio.value=4;
+  lim.attack.value=0.006; lim.release.value=0.30;
+  lim.connect(A.destination);
+  master = A.createGain(); master.gain.value = store.vol; master.connect(lim);
   verb = makeVerb(A);
   noiseBuf = makeNoise(A);
   var vg = A.createGain(); vg.gain.value = .60; verb.connect(vg); vg.connect(master);
@@ -321,80 +388,100 @@ function unlockSilent(){
   if(silentEl){ silentEl.volume = 0.001; var p = silentEl.play(); if(p&&p.catch) p.catch(function(){}); }
 }
 
-/* bowl tone: inharmonic partials, soft swell in, long decay — no strike */
+/* Struck metal is inharmonic: its overtones are not whole multiples of the
+   fundamental, each dies at its own rate, and the rim is never perfectly round,
+   so each partial is really two very close frequencies beating against each
+   other. All three of those are modelled here — that beating is the shimmer. */
+var TONE = {
+  bowls: { p:[1, 2.74, 5.36, 8.70, 12.50],  g:[1, .34, .17, .075, .028],
+           d:[1, .70, .50, .34, .22],       b:[0.55, 1.1, 1.7, 2.4, 3.2], at:0.20 },
+  glass: { p:[1, 2.005, 3.99, 6.02, 9.10],  g:[1, .22, .085, .035, .012],
+           d:[1, .82, .62, .44, .30],       b:[0.35, 0.7, 1.0, 1.4, 1.9], at:0.11 },
+  /* a handpan is deliberately tuned so its first two overtones land on the
+     octave and the twelfth — harmonic, not inharmonic. That is what separates
+     it from a bell: warm and pitched rather than shimmering and ambiguous. */
+  handpan:{ p:[1, 2.00, 3.00, 4.02, 6.01],  g:[1, .44, .24, .10, .035],
+            d:[1, .60, .43, .29, .19],      b:[0.4, 0.8, 1.2, 1.7, 2.3],
+            at:0.045, tap:0.30 }
+};
 function bowl(freq, amp, decay, attack){
-  if(!A || !store.snd) return;
-  var t = A.currentTime, parts=[1,2.02,2.74,4.07,5.43], gains=[1,.42,.28,.15,.08];
-  var at = attack===undefined ? 0.22 : attack;
+  if(!A || store.timbre==='none') return;
+  var T = TONE[store.timbre] || TONE.bowls;
+  var t = A.currentTime;
+  var at = attack===undefined ? T.at : attack;
   var out = A.createGain(); out.gain.value = amp;
   out.connect(master); out.connect(A.verbIn);
-  for(var i=0;i<parts.length;i++){
-    var o = A.createOscillator(); o.type='sine';
-    o.frequency.value = freq*parts[i];
-    var g = A.createGain();
-    g.gain.setValueAtTime(0.0001,t);
-    g.gain.exponentialRampToValueAtTime(gains[i], t+at+i*0.03);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + decay*(1-i*0.11));
-    o.connect(g); g.connect(out);
-    o.start(t); o.stop(t + decay + .3);
+  /* a hair of detune per strike so no two rings are identical */
+  var drift = 1 + (Math.random()-0.5)*0.0007;
+  /* the soft thump of the shell being touched — definition without a clack */
+  if(T.tap && noiseBuf){
+    var ns=A.createBufferSource(); ns.buffer=noiseBuf; ns.loop=true;
+    var nf=A.createBiquadFilter(); nf.type='bandpass';
+    nf.frequency.value=freq*2.2; nf.Q.value=1.1;
+    var ng=A.createGain();
+    ng.gain.setValueAtTime(0.0001,t);
+    ng.gain.exponentialRampToValueAtTime(T.tap*amp, t+0.012);
+    ng.gain.exponentialRampToValueAtTime(0.0001, t+0.22);
+    ns.connect(nf); nf.connect(ng); ng.connect(out);
+    ns.start(t); ns.stop(t+0.30);
+  }
+  for(var i=0;i<T.p.length;i++){
+    var f = freq*T.p[i]*drift;
+    if(f > 16000) continue;
+    var dec = Math.max(0.4, decay*T.d[i]);
+    for(var v=0; v<2; v++){
+      var o = A.createOscillator(); o.type='sine';
+      o.frequency.value = f + (v? 1:-1)*(T.b[i]/2);
+      var g = A.createGain();
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(T.g[i]*0.5, t+at+i*0.025);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+dec);
+      o.connect(g); g.connect(out);
+      o.start(t); o.stop(t + dec + .25);
+    }
   }
 }
 
-/* the voice of a phase: one sustained tone that glides while you breathe.
-   rising through the inhale, falling through the exhale, steady on a hold. */
-var GLIDE = {
-  'in':      [220.00, 293.66],   // A3 -> D4
-  'in2':     [293.66, 349.23],   // D4 -> F4
-  'hold':    [293.66, 293.66],
-  'out':     [293.66, 146.83],   // D4 -> D3
-  'holdout': [146.83, 146.83]
+/* one tone marks the start of each phase, then silence while it rings out.
+   pitch, amplitude and ring length differ per phase — that is the tonal change. */
+var CUE = {
+  'in':      [220.00, 0.30, 7.0],   // A3
+  'in2':     [293.66, 0.20, 3.5],   // D4
+  'hold':    [329.63, 0.13, 4.5],   // E4
+  'out':     [146.83, 0.30, 9.0],   // D3, the longest ring
+  'holdout': [196.00, 0.11, 4.5]    // G3
 };
-var GAMP = { 'in':0.170, 'in2':0.125, 'hold':0.075, 'out':0.170, 'holdout':0.060 };
 
-function voice(type, dur){
-  if(!A || !store.snd) return;
-  var m = GLIDE[type]; if(!m) return;
-  var t = A.currentTime, f1=m[0], f2=m[1];
-  /* rapid phases get a breath of air, not a tone — 30 overlapping bells is mud */
-  if(dur < 1.0){
-    if(type==='out') puff(dur);
-    return;
-  }
-  var amp = GAMP[type] * (store.timbre==='ocean' ? 1.8 : 1);
-  if(dur < 1.8) amp *= 0.62;
-  var tail = Math.min(1.8, 0.35 + dur*0.35);
-  var out = A.createGain();
-  out.gain.setValueAtTime(0.0001, t);
-  out.gain.exponentialRampToValueAtTime(amp, t + Math.max(0.20, dur*0.34));
-  out.gain.exponentialRampToValueAtTime(0.0001, t + dur + tail);
-  out.connect(master); out.connect(A.verbIn);
-  var stopAt = t + dur + tail + 0.25;
+function cue(type, dur){
+  if(!A) return;
+  /* rapid phases get a breath of air, not a bell — 30 overlapping bowls is mud */
+  if(dur < 1.0){ if(type==='out') puff(dur); return; }
+  var c = CUE[type]; if(!c) return;
+  var amp = c[1], ring = Math.min(c[2], dur + 3.0);
+  if(store.timbre==='breath'){ swell(c[0], amp*0.9, Math.min(dur*0.9, 4.0)); return; }
+  bowl(c[0], amp, ring);
+}
 
-  if(store.timbre==='ocean'){
-    var src=A.createBufferSource(); src.buffer=noiseBuf; src.loop=true;
-    var bp=A.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=1.5;
-    bp.frequency.setValueAtTime(f1*2.4, t);
-    bp.frequency.exponentialRampToValueAtTime(f2*2.4, t+Math.max(0.2,dur));
-    var lp=A.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=1800;
-    src.connect(bp); bp.connect(lp); lp.connect(out);
-    src.start(t); src.stop(stopAt);
-    return;
-  }
-  var T = store.timbre==='glass'
-        ? {p:[1,2.76,5.40],       g:[1,.24,.09]}
-        : {p:[1,2.02,2.74,4.07],  g:[1,.38,.22,.10]};
-  for(var i=0;i<T.p.length;i++){
-    var o=A.createOscillator(); o.type='sine';
-    o.frequency.setValueAtTime(f1*T.p[i], t);
-    o.frequency.exponentialRampToValueAtTime(f2*T.p[i], t+Math.max(0.2,dur));
-    var gg=A.createGain(); gg.gain.value=T.g[i];
-    o.connect(gg); gg.connect(out); o.start(t); o.stop(stopAt);
-  }
+/* the airy voice: a filtered swell of breath instead of a struck tone */
+function swell(freq, amp, dur){
+  if(!A || !noiseBuf) return;
+  var t=A.currentTime;
+  var src=A.createBufferSource(); src.buffer=noiseBuf; src.loop=true;
+  var bp=A.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=1.4;
+  bp.frequency.value = freq*2.4;
+  var lp=A.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=1900;
+  var gp=A.createGain();
+  gp.gain.setValueAtTime(0.0001,t);
+  gp.gain.exponentialRampToValueAtTime(amp*0.55, t+dur*0.42);
+  gp.gain.exponentialRampToValueAtTime(0.0001, t+dur+1.4);
+  src.connect(bp); bp.connect(lp); lp.connect(gp); gp.connect(master);
+  var vg=A.createGain(); vg.gain.value=0.42; gp.connect(vg); vg.connect(A.verbIn);
+  src.start(t); src.stop(t+dur+1.7);
 }
 
 /* a short breath of air for the sharp exhales */
 function puff(dur){
-  if(!A || !store.snd || !noiseBuf) return;
+  if(!A || store.timbre==='none' || !noiseBuf) return;
   var t=A.currentTime;
   var src=A.createBufferSource(); src.buffer=noiseBuf; src.loop=true;
   var bp=A.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=0.9;
@@ -411,7 +498,7 @@ function puff(dur){
 
 /* metronome: a soft muted pluck on the second, well under the tone */
 function tick(){
-  if(!A || !store.snd || !store.metro) return;
+  if(!A || !store.metro) return;
   var t=A.currentTime;
   var o=A.createOscillator(); o.type='sine'; o.frequency.value=155.6;
   var lp=A.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=760; lp.Q.value=0.7;
@@ -425,22 +512,74 @@ function tick(){
 }
 
 function startDrone(){
-  if(!A || !store.snd || !store.drone || drone) return;
+  if(!A || store.bed==='off' || drone) return;
   droneFilt = A.createBiquadFilter(); droneFilt.type='lowpass';
-  droneFilt.frequency.value = 420; droneFilt.Q.value=.7;
   droneGain = A.createGain(); droneGain.gain.value = 0;
   droneFilt.connect(droneGain); droneGain.connect(master);
   var dg2 = A.createGain(); dg2.gain.value=.45; droneGain.connect(dg2); dg2.connect(A.verbIn);
   drone = [];
-  var fs = [73.42, 110.0, 146.83, 220.0], gs=[.55,.38,.26,.10], dt=[0,4,-3,6];
+
+  if(store.bed==='rain'){
+    /* soft rain on a roof: two bands of noise, slowly breathing */
+    droneFilt.frequency.value = 1100; droneFilt.Q.value=.5;
+    var src=A.createBufferSource(); src.buffer=noiseBuf; src.loop=true;
+    src.connect(droneFilt); src.start(); drone.push(src);
+    var hs=A.createBiquadFilter(); hs.type='highpass'; hs.frequency.value=2600;
+    var hg=A.createGain(); hg.gain.value=.35;
+    var s2=A.createBufferSource(); s2.buffer=noiseBuf; s2.loop=true; s2.playbackRate.value=1.7;
+    s2.connect(hs); hs.connect(hg); hg.connect(droneFilt);
+    s2.start(); drone.push(s2);
+    droneGain.gain.setTargetAtTime(.115, A.currentTime, 2.4);
+    return;
+  }
+
+  if(store.bed==='shruti'){
+    /* a shruti box is reeds, not strings: dense harmonics through a warm box,
+       two of them wandering slightly against each other, and the breath of the
+       bellows underneath. Tuned to the root and its fifth, as they always are. */
+    droneFilt.frequency.value = 980; droneFilt.Q.value=.8;
+    var reed=A.createBiquadFilter(); reed.type='peaking';
+    reed.frequency.value=560; reed.Q.value=1.1; reed.gain.value=6;
+    reed.connect(droneFilt);
+    var rf=[73.42,110.0,146.83,220.0], rg=[.34,.26,.17,.07], lfo=[0.11,0.15,0.09,0.13];
+    for(var j=0;j<rf.length;j++){
+      var ro=A.createOscillator(); ro.type='sawtooth'; ro.frequency.value=rf[j];
+      var rgn=A.createGain(); rgn.gain.value=rg[j];
+      ro.connect(rgn); rgn.connect(reed); ro.start(); drone.push(ro);
+      var lo=A.createOscillator(); lo.type='sine'; lo.frequency.value=lfo[j];
+      var lg=A.createGain(); lg.gain.value=5 + j;      // cents of wander
+      lo.connect(lg); lg.connect(ro.detune); lo.start(); drone.push(lo);
+    }
+    var air=A.createBufferSource(); air.buffer=noiseBuf; air.loop=true;
+    var ah=A.createBiquadFilter(); ah.type='highpass'; ah.frequency.value=2200;
+    var ag=A.createGain(); ag.gain.value=.05;
+    air.connect(ah); ah.connect(ag); ag.connect(droneFilt);
+    air.start(); drone.push(air);
+    droneGain.gain.setTargetAtTime(.155, A.currentTime, 2.4);
+    return;
+  }
+
+  /* the thrum: a low fifth with a slow chorus over it */
+  droneFilt.frequency.value = 460; droneFilt.Q.value=.7;
+  var fs = [73.42, 110.0, 146.83, 220.0, 293.66],
+      gs = [.62, .44, .30, .13, .05],
+      dt = [0, 4, -3, 6, -5];
   for(var i=0;i<fs.length;i++){
     var o = A.createOscillator(); o.type = i<2?'sine':'triangle';
     o.frequency.value = fs[i]; o.detune.value = dt[i];
     var g = A.createGain(); g.gain.value = gs[i];
     o.connect(g); g.connect(droneFilt); o.start();
     drone.push(o);
+    /* a second voice a few cents off, drifting — this is what makes it breathe */
+    if(i<3){
+      var o2 = A.createOscillator(); o2.type='sine';
+      o2.frequency.value = fs[i]; o2.detune.value = dt[i] + (i%2?7:-7);
+      var g2 = A.createGain(); g2.gain.value = gs[i]*0.55;
+      o2.connect(g2); g2.connect(droneFilt); o2.start();
+      drone.push(o2);
+    }
   }
-  droneGain.gain.setTargetAtTime(.135, A.currentTime, 2.2);
+  droneGain.gain.setTargetAtTime(.205, A.currentTime, 2.2);
 }
 function stopDrone(){
   if(!drone) return;
@@ -451,12 +590,20 @@ function stopDrone(){
 }
 function droneBreath(v){
   if(!drone||!droneFilt) return;
-  droneFilt.frequency.setTargetAtTime(360 + v*320, A.currentTime, .28);
-  droneGain.gain.setTargetAtTime(.105 + v*.070, A.currentTime, .35);
+  if(store.bed==='rain'){
+    droneFilt.frequency.setTargetAtTime(950 + v*700, A.currentTime, .30);
+    droneGain.gain.setTargetAtTime(.095 + v*.055, A.currentTime, .35);
+  } else if(store.bed==='shruti'){
+    droneFilt.frequency.setTargetAtTime(760 + v*620, A.currentTime, .30);
+    droneGain.gain.setTargetAtTime(.130 + v*.065, A.currentTime, .35);
+  } else {
+    droneFilt.frequency.setTargetAtTime(400 + v*360, A.currentTime, .28);
+    droneGain.gain.setTargetAtTime(.165 + v*.090, A.currentTime, .35);
+  }
 }
 
 function reward(){
-  if(!A) return;
+  if(!A || store.timbre==='none') return;
   var seq=[146.83,220,293.66,349.23,440], i=0;
   (function next(){
     if(i>=seq.length) return;
@@ -775,10 +922,18 @@ VIS.bloom = function(t,v){
 };
 
 var TIMBRES = [
-  {id:'bowls',  n:'Bowls',  d:'warm, long decay'},
-  {id:'glass',  n:'Glass',  d:'clear and bright'},
-  {id:'ocean',  n:'Breath', d:'air, no pitch'},
-  {id:'silent', n:'Silent', d:'motion only'}
+  {id:'bowls',   n:'Bowls',   d:'warm, long ring'},
+  {id:'glass',   n:'Glass',   d:'clear and bright'},
+  {id:'handpan', n:'Handpan', d:'round and pitched'},
+  {id:'breath',  n:'Breath',  d:'a swell of air'},
+  {id:'none',    n:'None',    d:'no phase tone'}
+];
+
+var BEDS = [
+  {id:'drone',  n:'Thrum',  d:'low sustained bed'},
+  {id:'shruti', n:'Shruti', d:'reed harmonium'},
+  {id:'rain',   n:'Rain',   d:'soft rainfall'},
+  {id:'off',    n:'No bed', d:'tones only'}
 ];
 
 var VIS_META = [
@@ -790,7 +945,8 @@ var VIS_META = [
 
 /* ============================ ENGINE ============================ */
 var running=false, startT=0, sessionSec=0, phaseIdx=0, phaseT=0, lungFrom=0, lung=0, lungTo=1;
-var idlePhase=0, lastFrame=0, wake=null, dbTick=0, starting=false, uiT=0, lastTick=-1;
+var idlePhase=0, lastFrame=0, wake=null, dbTick=0, starting=false, uiT=0, lastTick=-1, lastShown=-1;
+var PHASE_NAME = {'in':'breathe in','in2':'top up','hold':'hold','out':'breathe out','holdout':'empty'};
 
 function easeCos(x){ return 0.5 - 0.5*Math.cos(Math.PI*Math.max(0,Math.min(1,x))); }
 
@@ -799,7 +955,7 @@ function beginPhase(i){
   lungFrom = lung;
   lungTo = (ph.to===undefined) ? lung : ph.to;
   phaseT = 0;
-  voice(ph.t, ph.s);
+  cue(ph.t, ph.s);
 }
 
 function frame(ts){
@@ -815,10 +971,18 @@ function frame(ts){
     var e = ph.t==='in2' ? (1-Math.pow(1-pr,2.2)) : easeCos(pr);
     lung = lungFrom + (lungTo-lungFrom)*e;
     if(phaseT >= ph.s){
+      if(sel.once && phaseIdx === sel.phases.length-1){ finish(); return; }
       phaseIdx = (phaseIdx+1) % sel.phases.length;
       beginPhase(phaseIdx);
     }
     if((dbTick=(dbTick+1)%5)===0) droneBreath(lung);
+    if(sel.timer){
+      var left = Math.max(0, Math.ceil(ph.s - phaseT));
+      if(left !== lastShown){
+        lastShown = left;
+        elTimer.innerHTML = left + '<i>' + PHASE_NAME[ph.t] + '</i>';
+      }
+    }
     var el = now - startT;
     var sec = Math.floor(el);
     if(sec !== lastTick){ lastTick = sec; if(sec>0) tick(); }
@@ -847,6 +1011,7 @@ function frame(ts){
 var elHome=document.getElementById('home'), elSess=document.getElementById('sess'),
     elDone=document.getElementById('done'), elSet=document.getElementById('set'),
     elCount=document.getElementById('count'), elChrome=document.getElementById('chrome'),
+    elTimer=document.getElementById('ptimer'),
     elBar=document.getElementById('bar');
 
 var elScrim=document.getElementById('scrim');
@@ -875,9 +1040,10 @@ function start(){
   (function tick(){
     if(n===0){
       elCount.style.opacity='0';
-      starting=false; running=true; sessionSec = dur*60; startT = performance.now()/1000;
+      starting=false; running=true; sessionSec = patternSecs(sel) || dur*60; startT = performance.now()/1000;
       lung=0; phaseIdx=0; lastTick=-1; startDrone(); beginPhase(0);
-      elBar.style.width='0%';
+      elBar.style.width='0%'; lastShown=-1;
+      elTimer.classList.toggle('show', !!sel.timer);
       requestWake();
       return;
     }
@@ -889,6 +1055,11 @@ function start(){
   })();
 }
 
+function patternSecs(p){
+  if(!p.once) return 0;
+  var n=0; for(var i=0;i<p.phases.length;i++) n += p.phases[i].s;
+  return Math.round(n);
+}
 function finish(){ endSession(true); }
 
 function endSession(complete){
@@ -896,9 +1067,10 @@ function endSession(complete){
   running = false;
   var el = performance.now()/1000 - startT;
   releaseWake(); stopDrone(); elBar.style.width='0%'; elChrome.classList.remove('show');
+  elTimer.classList.remove('show');
   var secs = Math.round(Math.min(el, sessionSec));
   var earned = record(secs);
-  if(complete && store.snd) closeTone();
+  if(complete) closeTone();
 
   document.getElementById('dBig').textContent = fmtShort(secs);
   document.getElementById('dSub').textContent = complete ? sel.name+' complete' : sel.name+' — ended early';
@@ -909,7 +1081,7 @@ function endSession(complete){
     (nx ? '<br>'+fmtLong(nx.remain)+' to the '+nx.h+'-hour mark' : '<br>every milestone reached');
   var aw = document.getElementById('dAward');
   if(earned){ aw.textContent = earned+(earned===1?' hour':' hours')+' — milestone reached';
-    setTimeout(function(){ if(store.snd) reward(); }, complete?2200:500); }
+    setTimeout(reward, complete?2200:500); }
   else aw.textContent='';
   show(elDone);
 }
@@ -977,23 +1149,41 @@ function renderList(){
     d.className='row'+(p.id===sel.id?' on':'');
     d.innerHTML='<div class="nm">'+p.name+'</div>'+
       '<div class="rh">'+p.rhythm+'&nbsp;&nbsp;&middot;&nbsp;&nbsp;'+p.rate+'</div>'+
-      '<div class="why"><p>'+p.why+'</p><span class="tagline">'+p.badge+'</span></div>';
-    d.onclick=function(){ sel=p; store.pat=p.id; save(); renderList(); };
+      '<div class="why"><p>'+p.why+'</p><span class="tagline">'+p.badge+'</span>'+
+      (p.tags.indexOf('dive')>=0 ? '<div class="warn">'+DIVE_WARNING+'</div>' : '')+'</div>';
+    d.onclick=function(){ sel=p; store.pat=p.id; save(); renderList(); renderDur(); };
     L.appendChild(d);
     if(p.id===sel.id) chosen=d;
   });
   /* keep the open pattern and its note in view on short screens */
-  if(chosen) setTimeout(function(){
-    var top = Math.max(0, chosen.offsetTop - 6);
-    if(L.scrollTo) L.scrollTo({top:top, behavior: listReady?'smooth':'auto'});
-    else L.scrollTop = top;
-    listReady = true;
-  }, 60);
+  /* scroll once now and again after the note has finished expanding,
+     so a long note never pushes its own heading off the top */
+  if(chosen) [60, 580].forEach(function(delay){
+    setTimeout(function(){
+      /* measure against the scroll box, not the offset parent — .list is not
+         positioned, so offsetTop here would include the header above it */
+      var top = Math.max(0, L.scrollTop +
+        (chosen.getBoundingClientRect().top - L.getBoundingClientRect().top) - 6);
+      if(L.scrollTo) L.scrollTo({top:top, behavior: listReady?'smooth':'auto'});
+      else L.scrollTop = top;
+      listReady = true;
+    }, delay);
+  });
 }
 
 function renderDur(){
   var D=document.getElementById('dur');
   D.querySelectorAll('i').forEach(function(e){e.remove();});
+  var b=D.querySelector('b');
+  if(sel.once){
+    b.textContent='Length';
+    var f=document.createElement('i'); f.className='on';
+    f.textContent=Math.round(patternSecs(sel)/60)+' min — set by the table';
+    f.style.fontSize='13px'; f.style.letterSpacing='.04em';
+    D.appendChild(f);
+    return;
+  }
+  b.textContent='Minutes';
   DURATIONS.forEach(function(m){
     var i=document.createElement('i'); i.textContent=m;
     if(m===dur) i.className='on';
@@ -1017,34 +1207,38 @@ function renderSettings(){
     V.appendChild(d);
   });
   var T=document.getElementById('timbreOpts'); T.innerHTML='';
-  TIMBRES.forEach(function(v){
-    var on = v.id==='silent' ? !store.snd : (store.snd && store.timbre===v.id);
+  TIMBRES.forEach(function(v,vi){
     var d=document.createElement('div');
-    d.className='opt'+(on?' on':'');
+    d.className='opt'+(store.timbre===v.id?' on':'')+
+      ((TIMBRES.length%2 && vi===TIMBRES.length-1)?' wide':'');
     d.innerHTML=v.n+'<small>'+v.d+'</small>';
     d.onclick=function(){
-      if(v.id==='silent'){ store.snd=false; stopDrone(); }
-      else { store.snd=true; store.timbre=v.id; initAudio();
-             if(running && !drone) startDrone(); }
-      save(); renderSettings();
-      if(store.snd) voice('in', 2.2);
+      store.timbre=v.id; save(); renderSettings();
+      if(v.id!=='none'){ initAudio(); cue('in', 4); }
     };
     T.appendChild(d);
   });
 
   var LY2=document.getElementById('layerOpts'); LY2.innerHTML='';
-  [{k:'drone', n:'Drone', d:'low sustained bed'},
-   {k:'metro', n:'Metronome', d:'soft pulse each second'}].forEach(function(o){
+  BEDS.forEach(function(o){
     var d=document.createElement('div');
-    d.className='opt'+(store[o.k]?' on':'');
-    d.innerHTML=o.n+'<small>'+o.d+(store[o.k]?' · on':' · off')+'</small>';
+    d.className='opt'+(store.bed===o.id?' on':'');
+    d.innerHTML=o.n+'<small>'+o.d+'</small>';
     d.onclick=function(){
-      store[o.k]=!store[o.k]; save(); renderSettings();
-      if(o.k==='drone'){ if(store.drone && running) startDrone(); else if(!store.drone) stopDrone(); }
-      if(o.k==='metro' && store.metro && store.snd){ initAudio(); tick(); }
+      store.bed=o.id; save(); renderSettings();
+      stopDrone();
+      if(o.id!=='off'){ initAudio(); setTimeout(function(){ startDrone();
+        if(!running) setTimeout(stopDrone, 5000); }, 60); }
     };
     LY2.appendChild(d);
   });
+  var M=document.getElementById('metroOpt'); M.innerHTML='';
+  var md=document.createElement('div');
+  md.className='opt'+(store.metro?' on':'');
+  md.innerHTML='Metronome<small>soft pulse each second'+(store.metro?' · on':' · off')+'</small>';
+  md.onclick=function(){ store.metro=!store.metro; save(); renderSettings();
+    if(store.metro){ initAudio(); tick(); } };
+  M.appendChild(md);
   document.getElementById('vol').value=Math.round(store.vol*100);
   var B=document.getElementById('badges'); B.innerHTML='';
   MILES.forEach(function(h){
