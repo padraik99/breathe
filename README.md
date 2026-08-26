@@ -12,24 +12,61 @@ On iPhone: open in Safari → Share → **Add to Home Screen**.
 
 ## The patterns
 
-Every pattern in the app carries a short note on what the evidence actually
-supports. The short version:
+<!-- patterns:start -->
 
-| Pattern | Rhythm | For | Basis |
+| Pattern | Rhythm | For | Session |
 |---|---|---|---|
-| **Resonance** | 4 in · 6 out | stress, sleep | ~6 breaths/min sits at the baroreflex's resonant frequency; beat box and 4-7-8 head-to-head on HRV |
-| **Coherent** | 5.5 · 5.5 | sleep, stress | same principle, even ratio; the pace used in most slow-breathing sleep research |
-| **Long Exhale** | 4 in · 8 out | sleep | 1:2 ratio — vagal outflow rises during exhalation, so weighting the out-breath biases the cycle parasympathetic |
-| **Cyclic Sigh** | double inhale · long exhale | stress | Stanford RCT: 5 min/day for a month beat box breathing, cyclic hyperventilation and mindfulness meditation on mood |
-| **Box** | 4 · 4 · 4 · 4 | stress | moves HRV less than resonance, but the symmetry gives a racing mind a shape to follow |
-| **Sharp Reset** | 15 forced exhales, then settle | focus | kapalabhati. Forced exhalation recruits deltoid and obliques more than a Valsalva; working-memory accuracy improved post-practice, reaction time lengthened |
-| **CO₂ Table** | 6 holds of 40s, rest 90s→30s | dive | trains tolerance of air hunger. In novices, CO₂ tables dropped SpO₂ ~6% vs ~16% for maximal holds |
-| **O₂ Table** | 5 holds 30s→70s, 90s recovery | dive | trains hypoxia tolerance. Two weeks of daily dry apnea sharpens the diving response; eight weeks raises resting spleen volume |
+| **Resonance** | 4 in · 6 out | Stress, Sleep | you choose, from 5 min |
+| **Coherent** | 5.5 in · 5.5 out | Sleep, Stress | you choose, from 5 min |
+| **Long Exhale** | 4 in · 8 out | Sleep | you choose, from 5 min |
+| **Cyclic Sigh** | in · top up · long out | Stress | you choose, from 5 min |
+| **Box** | 4 · 4 · 4 · 4 | Stress | you choose, from 5 min |
+| **Sharp Reset** | 15 sharp exhales · then settle | Focus | you choose, from 5 min |
+| **CO₂ Table** | rest at 4 in · 6 out, then hold 40s | Dive | 11 min, fixed |
+| **O₂ Table** | rest at 4 in · 6 out, then hold 30→70s | Dive | 12 min, fixed |
+
+<sub>Generated from `index.html` by `tools/sync-readme.mjs` — edit the app, not this table.</sub>
+
+<!-- patterns:end -->
 
 Sessions start at 5 minutes because that is the minimum effective dose: comparing
 5, 10, 15 and 20 minutes at six breaths per minute found no difference in vagal
 activation between them. Longer sessions lower resting respiratory rate
-afterward — duration buys carry-over, not depth.
+afterward — duration buys carry-over, not depth. The two dive tables set their
+own length and ignore the minutes control.
+
+## Why these patterns
+
+- **Resonance** — six breaths a minute sits at the baroreflex's own resonant
+  frequency, so heart rate and blood pressure begin swinging in step. Beat both
+  box breathing and 4-7-8 head-to-head on heart-rate variability.
+- **Coherent** — the same principle at an even ratio; the pace used in most
+  slow-breathing sleep research, and the one that survives a long session.
+- **Long Exhale** — a 1:2 ratio. Vagal outflow to the heart rises during
+  exhalation, so weighting the out-breath biases the whole cycle parasympathetic.
+- **Cyclic Sigh** — Stanford RCT: five minutes a day for a month beat box
+  breathing, cyclic hyperventilation *and* mindfulness meditation on mood.
+- **Box** — moves HRV less than resonance, but the symmetry gives a racing mind
+  a shape to follow, which is worth more than a few milliseconds of RMSSD.
+- **Sharp Reset** — kapalabhati. Forced exhalation recruits the anterior deltoid
+  and obliques more than a Valsalva; working-memory accuracy improved right
+  after practice, though reaction time lengthened.
+- **CO₂ Table** — trains tolerance of air hunger, which is a CO₂ signal rather
+  than an oxygen one. In novices these dropped SpO₂ only ~6% against ~16% for
+  maximal breath-holds.
+- **O₂ Table** — trains hypoxia tolerance. Two weeks of daily dry apnea sharpens
+  the diving response; eight weeks raises resting spleen volume. Honest caveat:
+  in novices, tables did not produce deeper hypoxia than plain maximal holds, so
+  their value is structure and safety rather than intensity.
+
+## Reading a pattern
+
+Every pattern shows its shape as a line: **rising** while you breathe in,
+**level** while you hold, **falling** while you breathe out. Segment widths are
+proportional to real elapsed time and each is labelled with its seconds, so a
+40-second hold looks like a 40-second hold rather than one more evenly-spaced
+step. The same graph appears in the description and again, larger, during the
+countdown before a session starts.
 
 ## Breath-hold safety
 
@@ -43,6 +80,8 @@ you breathe before your oxygen ran out. The app states this on every dive patter
 
 - Four ambient companions (Drifter, Aurora, Ink, Bloom) drawn on canvas, each
   breathing with you and idling on its own between phases
+- A rise/hold/fall graph of each pattern, drawn to real time, in the description
+  and on the pre-session countdown
 - Synthesized audio, no asset files. Bell tones are modelled on struck metal:
   inharmonic partial ratios, per-partial decay, and two slightly detuned voices
   per partial so each ring beats and shimmers. Voices: Bowls, Glass, Handpan, Breath, None.
@@ -56,6 +95,33 @@ you breathe before your oxygen ran out. The app states this on every dive patter
 ## Limits
 
 Audio stops when iOS backgrounds the app, so it can't run behind a locked screen.
+
+## Working on it
+
+`index.html` is the whole application — open it, edit it, reload it. There is no
+build step and no dependency to install.
+
+Before committing a change to it:
+
+```
+node tools/check.mjs
+```
+
+That parses the inline script (a stray apostrophe once broke it in a way that
+still rendered the menu but silently refused to start a session), confirms
+nothing external crept in that would break offline use, checks every pattern has
+the fields the UI reads, and verifies the README table still matches the app.
+
+The pattern table in this README is **generated** from the `PATTERNS` array in
+`index.html`. Change a rhythm or a duration in the app, then:
+
+```
+node tools/sync-readme.mjs
+```
+
+Rhythms and durations drift the moment the code changes, so they are derived.
+The reasoning under *Why these patterns* is hand-written and stays that way —
+evidence does not change because a number in the code did.
 
 ## Sources
 

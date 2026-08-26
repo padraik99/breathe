@@ -1,3 +1,7 @@
 .DS_Store
 Thumbs.db
 node_modules/
+
+# scratch from an older version of tools/check.mjs — kept so a stray copy
+# never lands in a commit
+.check.tmp.js

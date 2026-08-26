@@ -71,7 +71,8 @@
     font-variant-numeric:tabular-nums;}
   .row .why{max-height:0;overflow:hidden;opacity:0;
     transition:max-height .5s ease,opacity .4s ease,margin .5s ease;}
-  .row.on .why{max-height:620px;opacity:1;margin-top:10px;}
+  .row.on .why{max-height:700px;opacity:1;margin-top:10px;}
+  .row .why .glyph{margin:2px 0 12px;}
   .row .why p{margin:0;font-size:13.5px;line-height:1.55;color:var(--dim);max-width:34em;}
   .tagline{display:inline-block;margin-top:8px;font-size:10.5px;letter-spacing:.14em;
     text-transform:uppercase;color:var(--accent);opacity:.75;}
@@ -95,9 +96,17 @@
 
   /* ---------- session ---------- */
   #sess{justify-content:flex-end;align-items:center;}
-  #count{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
-    font:200 96px/1 ui-serif,Georgia,serif;color:var(--ink);opacity:0;pointer-events:none;
-    font-variant-numeric:tabular-nums;}
+  #intro{position:fixed;left:0;right:0;top:50%;transform:translateY(-50%);
+    padding:0 30px;text-align:center;opacity:0;pointer-events:none;
+    transition:opacity .8s ease;}
+  #intro.show{opacity:1;}
+  .iname{font:400 30px/1.2 ui-serif,Georgia,serif;color:var(--ink);}
+  .iglyph{margin:22px auto 4px;max-width:340px;}
+  .ihint{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:rgba(232,238,245,.42);}
+  .icount{margin-top:26px;font:200 62px/1 ui-serif,Georgia,serif;
+    color:rgba(232,238,245,.75);font-variant-numeric:tabular-nums;min-height:62px;}
+  .glyph{display:block;overflow:visible;}
   #ptimer{position:fixed;left:0;right:0;bottom:calc(var(--safe-b) + 74px);text-align:center;
     font:200 40px/1 ui-serif,Georgia,serif;color:rgba(232,238,245,.30);
     font-variant-numeric:tabular-nums;pointer-events:none;opacity:0;transition:opacity .6s;}
@@ -179,7 +188,12 @@
 <div class="screen hide" id="sess">
   <div id="chrome"><div id="stop">End</div></div>
 </div>
-<div id="count"></div>
+<div id="intro">
+  <div class="iname" id="iName"></div>
+  <div class="iglyph" id="iGlyph"></div>
+  <div class="ihint" id="iHint"></div>
+  <div class="icount" id="count"></div>
+</div>
 <div id="ptimer"></div>
 <div id="bar"></div>
 
@@ -292,16 +306,23 @@ var PATTERNS = [
     why:'The square. It moves heart-rate variability less than resonance breathing does, but the symmetry gives a racing mind a shape to follow, which is worth more than a few milliseconds of RMSSD when you are too wound up to count anything subtler. A steadier, not a sedative.' },
 
   { id:'reset', name:'Sharp Reset', tags:['focus'], phases:sharpResetPhases(),
+    preview:[{t:'out',s:0.55,to:.12},{t:'in',s:0.85,to:.86},{t:'out',s:0.55,to:.12},
+             {t:'in',s:0.85,to:.86},{t:'out',s:0.55,to:.12},{t:'in',s:0.85,to:.86},
+             {t:'out',s:6,to:0},{t:'in',s:4,to:1},{t:'out',s:6,to:0}],
     rhythm:'15 sharp exhales · then settle', rate:'≈40/min, then easy', badge:'Snap back to the moment',
     why:'Fifteen short forceful exhales through the nose with a passive inhale between — kapalabhati — then the breath settles for three slow cycles. The forced exhale is the piece with athletic support: in collegiate tennis players, forced exhalation and grunting recruited the anterior deltoid and obliques more than a Valsalva, and grunting out-produced forced inhalation for force. A trial of kapalabhati found working-memory accuracy improved right after practice, though reaction time lengthened. Stop if you feel light-headed — that is the CO₂ dropping, not progress.' },
 
   { id:'co2', name:'CO₂ Table', tags:['dive'], phases:co2Table(), once:true, timer:true,
-    rhythm:'6 holds of 40s · rest shrinks 90s→30s', rate:'about 11 minutes', badge:'Trains air hunger',
-    why:'The hold stays the same length while the rest between holds gets shorter, so each hold starts with more CO₂ still in you. What you are training is tolerance of the urge to breathe — that urge is a CO₂ signal, not an oxygen one. In apnea novices, CO₂ tables dropped oxygen saturation only about 6% against 16% for maximal breath-holds, which is what makes them the gentler way in. The breathe-up here is slow and deliberate on purpose: it is not hyperventilation, and it must never become it.' },
+    preview: slowCycles(3).concat([{t:'in',s:4,to:1},{t:'hold',s:40},{t:'out',s:5,to:0}]),
+    rhythm:'rest at 4 in · 6 out, then hold 40s', rate:'6 rounds · about 11 minutes',
+    badge:'Trains air hunger',
+    why:'The hold stays the same length while the rest between holds gets shorter, so each hold starts with more CO₂ still in you. What you are training is tolerance of the urge to breathe — that urge is a CO₂ signal, not an oxygen one. In apnea novices, CO₂ tables dropped oxygen saturation only about 6% against 16% for maximal breath-holds, which is what makes them the gentler way in. Between holds you breathe at 4 in, 6 out — the resonance pace — for as long as that round’s rest lasts. The breathe-up is slow and deliberate on purpose: it is not hyperventilation, and it must never become it.' },
 
   { id:'o2', name:'O₂ Table', tags:['dive'], phases:o2Table(), once:true, timer:true,
-    rhythm:'5 holds · 30s→70s · 90s recovery', rate:'about 12 minutes', badge:'Trains low oxygen',
-    why:'The rest stays fixed while the holds lengthen, pushing a little further into hypoxia each round. Two weeks of daily dry apnea work is enough to sharpen the diving response — stronger bradycardia, spleen contraction adding red cells to circulation — and eight weeks raises resting spleen volume. Worth knowing the honest finding: for beginners, tables did not produce deeper hypoxia than plain maximal holds, so their value is structure and safety, not intensity. Stop any hold whenever you want; the table is a suggestion, not a target.' }
+    preview: slowCycles(2).concat([{t:'in',s:4,to:1},{t:'hold',s:30},{t:'out',s:5,to:0}]),
+    rhythm:'rest at 4 in · 6 out, then hold 30→70s', rate:'5 rounds · about 12 minutes',
+    badge:'Trains low oxygen',
+    why:'The rest stays fixed while the holds lengthen, pushing a little further into hypoxia each round. Two weeks of daily dry apnea work is enough to sharpen the diving response — stronger bradycardia, spleen contraction adding red cells to circulation — and eight weeks raises resting spleen volume. Worth knowing the honest finding: for beginners, tables did not produce deeper hypoxia than plain maximal holds, so their value is structure and safety, not intensity. Recovery between holds is 90 seconds of 4 in, 6 out. Stop any hold whenever you want; the table is a suggestion, not a target.' }
 ];
 
 var DURATIONS = [5,10,15,20,30];
@@ -614,6 +635,54 @@ function reward(){
 function closeTone(){
   bowl(110,.24,9.0,0.45);
   setTimeout(function(){ bowl(164.81,.16,8.0,0.40); }, 900);
+}
+
+/* ================= THE SHAPE OF A PATTERN =================
+   One glance at the rhythm: the line climbs while you breathe in, holds level
+   while you hold, falls while you breathe out. Segment widths are true to time,
+   so a 40-second hold really does look like a 40-second hold. */
+function glyph(p, w, h, big){
+  var ph = p.preview || repeatFor(p.phases, 24);
+  var total=0, i;
+  for(i=0;i<ph.length;i++) total += ph[i].s;
+  if(!total) return '';
+  var padX=2, labelH = big?17:14, top=big?9:6, H=h-top-labelH-4, W=w-padX*2;
+  var x=padX, lung=0, pts='', labels='', ticks='';
+  pts += (padX)+','+(top+H)+' ';
+  for(i=0;i<ph.length;i++){
+    var q=ph[i];
+    var to = (q.to===undefined) ? lung : q.to;
+    var x2 = x + (q.s/total)*W;
+    pts += x2.toFixed(1)+','+(top+H*(1-to)).toFixed(1)+' ';
+    var wSeg = x2-x;
+    if(wSeg > (big?15:11)){
+      var lbl = (q.s % 1 ? q.s.toFixed(1) : q.s);
+      labels += '<text x="'+((x+x2)/2).toFixed(1)+'" y="'+(top+H+labelH-3)+
+        '" text-anchor="middle" font-size="'+(big?12:10)+'" fill="'+
+        (q.t==='hold'||q.t==='holdout' ? 'rgba(127,227,212,.80)' : 'rgba(232,238,245,.60)')+
+        '" font-family="ui-serif,Georgia,serif">'+lbl+'</text>';
+    }
+    if(q.t==='hold'||q.t==='holdout'){
+      ticks += '<line x1="'+x.toFixed(1)+'" y1="'+(top+H*(1-to)).toFixed(1)+
+        '" x2="'+x2.toFixed(1)+'" y2="'+(top+H*(1-to)).toFixed(1)+
+        '" stroke="rgba(127,227,212,.85)" stroke-width="'+(big?3:2.2)+'" stroke-linecap="round"/>';
+    }
+    lung=to; x=x2;
+  }
+  return '<svg class="glyph" viewBox="0 0 '+w+' '+h+'" width="100%" height="'+h+'" '+
+    'preserveAspectRatio="none" aria-hidden="true">'+
+    '<line x1="0" y1="'+(top+H)+'" x2="'+w+'" y2="'+(top+H)+
+      '" stroke="rgba(232,238,245,.10)" stroke-width="1"/>'+
+    '<polyline points="'+pts+'" fill="none" stroke="rgba(232,238,245,.55)" '+
+      'stroke-width="'+(big?2.2:1.7)+'" stroke-linejoin="round" stroke-linecap="round"/>'+
+    ticks + labels + '</svg>';
+}
+/* enough whole cycles to read as a rhythm, without overflowing the strip */
+function repeatFor(phases, secs){
+  var one=0, i; for(i=0;i<phases.length;i++) one += phases[i].s;
+  var out=[], n = one ? Math.max(1, Math.min(3, Math.floor(secs/one))) : 1;
+  for(i=0;i<n;i++) out = out.concat(phases);
+  return out;
 }
 
 /* ============================ VISUALS ============================ */
@@ -1011,13 +1080,13 @@ function frame(ts){
 var elHome=document.getElementById('home'), elSess=document.getElementById('sess'),
     elDone=document.getElementById('done'), elSet=document.getElementById('set'),
     elCount=document.getElementById('count'), elChrome=document.getElementById('chrome'),
-    elTimer=document.getElementById('ptimer'),
+    elTimer=document.getElementById('ptimer'), elIntro=document.getElementById('intro'),
     elBar=document.getElementById('bar');
 
 var elScrim=document.getElementById('scrim');
 function show(el){ [elHome,elSess,elDone,elSet].forEach(function(e){ e.classList.add('hide'); });
   el.classList.remove('hide');
-  elScrim.classList.toggle('clear', el===elSess); }
+  if(el!==elSess) elScrim.classList.remove('clear'); }
 
 function requestWake(){
   if('wakeLock' in navigator){
@@ -1035,21 +1104,24 @@ function start(){
   initAudio(); unlockSilent();
   store.pat = sel.id; store.dur = dur; save();
   show(elSess);
-  var n=3;
-  elCount.style.transition='none'; elCount.style.opacity='0';
+  document.getElementById('iName').textContent = sel.name;
+  document.getElementById('iGlyph').innerHTML = glyph(sel, 340, 96, true);
+  document.getElementById('iHint').textContent =
+    sel.preview ? 'one round · seconds' : 'seconds per phase';
+  elIntro.classList.add('show');
+  var n=4;
   (function tick(){
     if(n===0){
-      elCount.style.opacity='0';
+      elIntro.classList.remove('show');
       starting=false; running=true; sessionSec = patternSecs(sel) || dur*60; startT = performance.now()/1000;
       lung=0; phaseIdx=0; lastTick=-1; startDrone(); beginPhase(0);
+      elScrim.classList.add('clear');
       elBar.style.width='0%'; lastShown=-1;
       elTimer.classList.toggle('show', !!sel.timer);
       requestWake();
       return;
     }
     elCount.textContent = n;
-    elCount.style.transition='none'; elCount.style.opacity='.85';
-    setTimeout(function(){ elCount.style.transition='opacity .75s ease'; elCount.style.opacity='0'; }, 180);
     n--;
     setTimeout(tick, 1000);
   })();
@@ -1149,7 +1221,8 @@ function renderList(){
     d.className='row'+(p.id===sel.id?' on':'');
     d.innerHTML='<div class="nm">'+p.name+'</div>'+
       '<div class="rh">'+p.rhythm+'&nbsp;&nbsp;&middot;&nbsp;&nbsp;'+p.rate+'</div>'+
-      '<div class="why"><p>'+p.why+'</p><span class="tagline">'+p.badge+'</span>'+
+      '<div class="why">'+glyph(p, 300, 62, false)+
+      '<p>'+p.why+'</p><span class="tagline">'+p.badge+'</span>'+
       (p.tags.indexOf('dive')>=0 ? '<div class="warn">'+DIVE_WARNING+'</div>' : '')+'</div>';
     d.onclick=function(){ sel=p; store.pat=p.id; save(); renderList(); renderDur(); };
     L.appendChild(d);
