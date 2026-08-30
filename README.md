@@ -1,8 +1,15 @@
 # Breathe
 
-A breathing practice for sleep, stress, and focus. One self-contained HTML file —
-no build step, no dependencies, no network after first load. Add it to an iPhone
-Home Screen from Safari and it runs full-screen and offline like a native app.
+A breathing practice for sleep, stress, focus and breath-hold training. One
+self-contained HTML file — no build step, no dependencies, no network after first
+load. Add it to an iPhone Home Screen from Safari and it runs full-screen and
+offline like a native app.
+
+The interface is a dial: categories across the top, then a ring you turn to move
+between the patterns in that category. Minutes are typed or nudged, and each mode
+remembers its own length, so the common case needs no input at all. The whole app
+shifts colour with the category — deep plum and amber for Sleep, cold blue for
+Dive — which makes a wrong-mode mistake visible from across the room.
 
 ## Live
 
@@ -59,6 +66,14 @@ own length and ignore the minutes control.
   in novices, tables did not produce deeper hypoxia than plain maximal holds, so
   their value is structure and safety rather than intensity.
 
+## Why amber
+
+Melanopsin, the retinal pigment that tells the brain it is daytime, peaks around
+480 nm — almost exactly the cyan that most dark-mode apps use as an accent. For a
+screen you look at in bed, that is close to the worst available hue. Sleep and
+Stress therefore run warm, and the companion animation is tinted toward amber to
+match. Focus and Dive, which are daytime tools, are allowed to go cold.
+
 ## Reading a pattern
 
 Every pattern shows its shape as a line: **rising** while you breathe in,
@@ -80,8 +95,17 @@ you breathe before your oxygen ran out. The app states this on every dive patter
 
 - Four ambient companions (Drifter, Aurora, Ink, Bloom) drawn on canvas, each
   breathing with you and idling on its own between phases
-- A rise/hold/fall graph of each pattern, drawn to real time, in the description
-  and on the pre-session countdown
+- A rise/hold/fall graph of each pattern, drawn to real time, on the dial, in the
+  note sheet, and on the pre-session countdown
+- Tentacles simulated rather than animated — each is a chain of points with
+  inertia, drag and a wandering current, so the tail lags and curls and never
+  repeats. The aurora runs five independent curtains with occasional flares
+- A quiet pre-cue one second before every phase change, at the pitch of the phase
+  about to arrive, so nobody has to count
+- Sessions end on an exhale: the requested time is a target, and the app finishes
+  the breath you are in rather than cutting off mid-out-breath
+- Progress export/import codes in Settings, and `navigator.storage.persist()`, so
+  hours survive a reinstall or a new phone
 - Synthesized audio, no asset files. Bell tones are modelled on struck metal:
   inharmonic partial ratios, per-partial decay, and two slightly detuned voices
   per partial so each ring beats and shimmers. Voices: Bowls, Glass, Handpan, Breath, None.

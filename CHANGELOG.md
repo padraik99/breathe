@@ -2,6 +2,37 @@
 
 Newest first. Dates are when the change landed in the repo.
 
+## 2026-08-30 — The dial
+
+Whole interface rebuilt. The old vertical list read as a web page; this reads as
+an instrument.
+
+- **A ring instead of a list.** Categories across the top (ALL last), then a dial
+  you turn to move between the patterns in that category. One dot per pattern,
+  active at the top, with a `2 / 3 · SLEEP` label and tappable chevrons so the
+  control explains itself rather than needing a caption. ALL falls back to a list
+  — eight dots on one ring is clutter, and consistency is not worth that.
+- **Warm night palette, shifting by category.** Deep plum and amber for Sleep,
+  cold blue for Dive. Not only style: melanopsin peaks near 480 nm, so the old
+  cyan accent was close to the worst possible hue for a bedtime screen.
+- **Any whole minute, ending on an exhale.** Type it or hold the accelerating
+  ±. The requested time is a target — the app finishes the breath you are in and
+  stops at the end of the next exhale, and the home screen shows the real figure.
+- **Each mode remembers its own length**, so Sleep opens at your Sleep number and
+  Focus at your Focus number, and the common case needs no input at all.
+- **Tentacles simulated, not animated.** Each is a chain of points with inertia,
+  drag and a spatially varying current; the tail genuinely lags and curls. The
+  previous version was a fixed vertical drop with a sine over it, which is why it
+  looked like an Irish dancer — feet moving, torso rigid.
+- **Aurora rebuilt** as five independent curtains at their own heights and speeds,
+  with flares, filling the screen.
+- **A pre-cue one second before every phase change**, at the pitch of the phase
+  about to arrive, plus a closing ring for anyone running silent.
+- **Storage hardened**: `navigator.storage.persist()`, and export/import codes in
+  Settings so hours survive a reinstall or a new phone.
+- Evidence notes moved into a sheet — two lines on the dial, the whole note one
+  tap away.
+
 ## 2026-08-26
 
 **Pattern shapes.** Every pattern now shows its rhythm as a line — rising on an

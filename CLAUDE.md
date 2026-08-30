@@ -41,12 +41,37 @@ number in the code does.
 Then update `CHANGELOG.md` while the reasoning is still warm, and write the
 commit message from the actual diff (`git status`, `git log`) rather than memory.
 
+## How the interface is put together
+
+The home screen is a dial, not a list. `renderDial()` places one dot per pattern
+in the current category with the active one at twelve o'clock; dragging anywhere
+on `#dial` accumulates angle and steps the selection every `DOT_SPREAD` degrees.
+The `all` category deliberately falls back to `#listView` — eight dots on one ring
+is clutter.
+
+Colour is driven entirely by `body[data-cat=…]` custom properties. `--tint` is not
+decoration: it is fed to a `source-atop` fill over the canvas so the companion is
+warmed toward the category accent without touching the background. Sleep runs warm
+on purpose — melanopsin peaks near 480 nm, so a cyan bedtime screen suppresses
+melatonin more than an amber one.
+
+Session length is a *target*, not a cutoff. `realLength()` walks the pattern
+forward and returns the end of the first exhale at or after the requested time, so
+a session never stops mid-out-breath. Dive tables ignore it — they set their own.
+
 ## Two bugs that have already happened
 
 - **An unescaped apostrophe** in a pattern's `why` string terminated the literal
   and broke the entire inline script. The menu still rendered; sessions silently
   refused to start. Pattern prose is full of apostrophes — use `’` inside single
   quoted strings, and let `check.mjs` confirm it.
+- **A container with no size.** `#listView` was nested inside `#dial`, which
+  collapses to 0×0 when its SVG is hidden, so the ALL list rendered into nothing.
+  Absolutely positioned children need an ancestor that still has dimensions.
+- **Gravity and current swapped** in the tentacle simulation: the lateral force
+  was four times gravity, so the tentacles blew sideways like a gale. Gravity
+  dominates; the current is a sway. And the flow must vary *along* the rope, not
+  only over time — a single lateral force just produces a straight rope leaning.
 - **`offsetTop` measured against the wrong ancestor.** `.list` is not positioned,
   so its children's `offsetTop` included the header height and the list scrolled
   past the selected pattern. Measure with `getBoundingClientRect()` against the
