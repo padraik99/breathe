@@ -43,11 +43,20 @@ commit message from the actual diff (`git status`, `git log`) rather than memory
 
 ## How the interface is put together
 
-The home screen is a dial, not a list. `renderDial()` places one dot per pattern
-in the current category with the active one at twelve o'clock; dragging anywhere
-on `#dial` accumulates angle and steps the selection every `DOT_SPREAD` degrees.
-The `all` category deliberately falls back to `#listView` — eight dots on one ring
-is clutter.
+The home screen is a dial, not a list, and it carries three separate jobs at
+three radii. **Outer ring (r>148 in svg units): the length** — sixty ticks, an arc
+that fills from twelve o'clock, absolute angle-to-minutes mapping. **Inner band
+(120<r<148): the world** — companion and voice chosen as a pair from `WORLDS`, a
+relative drag with a 50° detent, the band painted with that world's gradient.
+**Dots on the inner band: the protocol** — equidistant, all one colour, the live
+one wearing a `.halo` that breathes at six a minute; they are tapped, never
+turned. Position on the ring carries no meaning, which is what stops it looking
+lopsided. `#shapeStrip` flashes the chosen pattern's shape for 2.8s on any change
+and then gets out of the way. The `all` category falls back to `#listView`.
+
+The split is deliberate: rotary gestures suit continuous quantities and taps suit
+discrete choices. An earlier build had the ring selecting patterns, which is why
+it needed carets to explain itself.
 
 Colour is driven entirely by `body[data-cat=…]` custom properties. `--tint` is not
 decoration: it is fed to a `source-atop` fill over the canvas so the companion is

@@ -84,18 +84,27 @@
   #dial{position:relative;touch-action:none;}
   #dots{transition:transform .38s cubic-bezier(.22,.9,.3,1);transform-origin:175px 175px;}
   #dialFace{position:absolute;inset:0;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;text-align:center;padding:0 62px;
+    align-items:center;justify-content:center;text-align:center;padding:0 64px;
     pointer-events:none;}
   #dialFace .eye{font-size:9.5px;font-weight:700;letter-spacing:.2em;color:var(--acc);
     text-transform:uppercase;}
-  #dialFace .nm{font-size:29px;font-weight:600;letter-spacing:-.02em;margin-top:9px;
+  #dialFace .nm{font-size:26px;font-weight:600;letter-spacing:-.02em;margin-top:9px;
     line-height:1.08;}
   #dialFace .rh{margin-top:8px;font-size:12px;color:var(--tx2);line-height:1.4;}
   #dialFace .gl{width:118px;margin-top:12px;}
-  #dialFace .more{margin-top:10px;font-size:9px;letter-spacing:.18em;color:var(--tx3);}
-  .chev{position:absolute;top:50%;margin-top:-22px;width:44px;height:44px;
-    display:grid;place-items:center;font-size:22px;color:var(--tx3);cursor:pointer;}
-  .chev.l{left:2px} .chev.r{right:2px}
+  #dialFace .more{margin-top:8px;font-size:9px;letter-spacing:.18em;color:var(--tx3);}
+  /* the selected protocol breathes at six a minute, so the live one is obvious
+     without needing a different colour from its neighbours */
+  .halo{transform-box:fill-box;transform-origin:center;
+    animation:halo 10s ease-in-out infinite;}
+  @keyframes halo{0%,100%{transform:scale(1);opacity:.34}
+                  50%{transform:scale(2.1);opacity:.04}}
+  .hit{fill:transparent;cursor:pointer;}
+  #shapeStrip{flex:0 0 auto;height:46px;margin-top:2px;opacity:0;
+    transition:opacity .55s ease;pointer-events:none;}
+  #shapeStrip.on{opacity:1;}
+  #dialFace .wl{margin-top:9px;font-size:9px;font-weight:700;letter-spacing:.2em;
+    color:var(--tx3);text-transform:uppercase;}
   #tapWhy{position:absolute;left:50%;top:50%;width:210px;height:210px;margin:-105px 0 0 -105px;
     border-radius:50%;cursor:pointer;}
 
@@ -243,28 +252,39 @@
   <div id="dialWrap">
     <div id="dial">
       <svg id="dialSvg" width="348" height="348" viewBox="0 0 350 350">
-        <g id="ticks"></g>
-        <circle cx="175" cy="175" r="152" fill="none"
-          stroke="rgba(246,239,231,.085)" stroke-width="30"/>
+        <defs>
+          <linearGradient id="worldGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop id="wg0" offset="0"/><stop id="wg1" offset="1"/>
+          </linearGradient>
+        </defs>
+        <g id="mTicks"></g>
+        <circle cx="175" cy="175" r="163" fill="none"
+          stroke="rgba(246,239,231,.07)" stroke-width="9"/>
+        <circle id="mArc" cx="175" cy="175" r="163" fill="none" stroke="var(--acc)"
+          stroke-width="9" stroke-linecap="round" transform="rotate(-90 175 175)"/>
+        <circle id="mKnob" cx="175" cy="12" r="7.5" fill="#fff6ea"
+          stroke="rgba(10,6,16,.85)" stroke-width="3"/>
+        <circle cx="175" cy="175" r="134" fill="none" stroke="url(#worldGrad)"
+          stroke-width="18" opacity=".30"/>
+        <circle cx="175" cy="175" r="134" fill="none" stroke="rgba(246,239,231,.07)"
+          stroke-width="18" stroke-dasharray="4 26"/>
         <g id="dots"></g>
-        <circle cx="175" cy="175" r="122" fill="rgba(255,236,214,.04)"
-          stroke="rgba(255,224,190,.12)"/>
-        <text id="posLabel" x="175" y="62" text-anchor="middle" font-size="9.5"
-          letter-spacing="2.2" fill="rgba(246,239,231,.42)" font-weight="700"></text>
+        <circle cx="175" cy="175" r="112" fill="rgba(255,236,214,.035)"
+          stroke="rgba(255,224,190,.10)"/>
       </svg>
       <div id="dialFace">
         <div class="eye" id="dEye"></div>
         <div class="nm" id="dNm"></div>
         <div class="rh" id="dRh"></div>
-        <div class="gl" id="dGl"></div>
+        <div class="wl" id="dWorld"></div>
         <div class="more" id="dMore">TAP FOR WHY</div>
       </div>
-      <div class="chev l" id="chevL">&#8249;</div>
-      <div class="chev r" id="chevR">&#8250;</div>
       <div id="tapWhy"></div>
     </div>
     <div id="listView"></div>
   </div>
+
+  <div id="shapeStrip"></div>
 
   <div class="mins" id="mins">
     <div class="step" id="minus">&minus;</div>
@@ -276,7 +296,7 @@
   </div>
   <div class="deft" id="deft"></div>
   <div class="lede2" id="lede2"></div>
-  <button class="go" id="goBtn"><span class="fill" id="goFill"></span><span class="lbl">HOLD TO BEGIN</span></button>
+  <button class="go" id="goBtn"><span class="fill" id="goFill"></span><span class="lbl">BEGIN</span></button>
   <div class="stats"><span id="stTotal"></span><span id="stStreak"></span></div>
 </div>
 
@@ -962,7 +982,7 @@ var BEDS = [
 var jparts=[]; for(var i=0;i<90;i++) jparts.push({x:Math.random(),y:Math.random(),
   s:.4+Math.random()*1.6, v:.004+Math.random()*.014, p:Math.random()*6.28});
 
-var JF = {ready:false, tent:[], arms:[], v:0, prev:0, vel:0, t:0, cx:0, cy:0};
+var JF = {ready:false, tent:[], arms:[], v:0, prev:0, vel:0, t:0, cx:0, cy:0, pcx:0, lean:0};
 
 function ropeInit(){
   JF.tent=[];
@@ -1034,11 +1054,24 @@ VIS.jelly = function(t,v){
 
   var base = Math.min(W,H)*0.20*LS;
   var cx = W/2 + Math.sin(t*0.113)*Math.min(W,H)*0.06 + Math.sin(t*0.31)*7;
-  var cy = H*LY + Math.sin(t*0.181)*H*0.02 - JF.v*Math.min(W,H)*0.022;
   var R = base*(0.74 + JF.v*0.58);
-  var rx = R*1.12*(1 - vel*0.10)*(1 - 0.030*Math.sin(t*1.05));
-  var ry = R*(0.90 + JF.v*0.14)*(1 + vel*0.13)*(1 + 0.030*Math.sin(t*1.05));
+  /* contracting drives it forward and lets it glide back on the refill —
+     that jet is most of what makes a jellyfish read as alive */
+  var cy = H*LY + Math.sin(t*0.181)*H*0.02 - JF.v*Math.min(W,H)*0.022 + vel*R*0.34;
+  /* squash and stretch: narrow and long on the squeeze, wide and shallow
+     as it fills. The old multipliers were both a tenth, and backwards. */
+  var idle = 0.055*Math.sin(t*1.05);          // never completely still
+  var rx = R*1.12*(1 + vel*0.42 - idle);
+  var ry = R*(0.90 + JF.v*0.14)*(1 - vel*0.34 + idle);
   var lip = cy + ry*0.34;
+  /* lean into the drift, and carry the tentacle roots round with it */
+  var vx = (cx - (JF.pcx||cx))/dt; JF.pcx = cx;
+  JF.lean += (Math.max(-0.24, Math.min(0.24, -vx*0.0016)) - JF.lean)*Math.min(1,dt*2.2);
+  var LN=JF.lean, cosL=Math.cos(LN), sinL=Math.sin(LN);
+  function rot(x,y){
+    var dx=x-cx, dy=y-cy;
+    return [cx+dx*cosL-dy*sinL, cy+dx*sinL+dy*cosL];
+  }
 
   g.globalCompositeOperation='lighter';
 
@@ -1054,7 +1087,8 @@ VIS.jelly = function(t,v){
   g.lineCap='round'; g.lineJoin='round';
   for(var k=0;k<JF.tent.length;k++){
     var rope=JF.tent[k];
-    var ax = cx + rope.off*rx*1.70, ay = lip - Math.abs(rope.off)*ry*0.28;
+    var A0 = rot(cx + rope.off*rx*1.70, lip - Math.abs(rope.off)*ry*0.28);
+    var ax = A0[0], ay = A0[1];
     var seg = R*(0.135 + 0.050*rope.hang);
     /* gravity dominant, current a gentle sway — the other way round is a gale */
     ropeStep(rope, ax, ay, seg, dt, 0.980, 430, 900*(0.6+0.8*rope.hang), t);
@@ -1066,7 +1100,8 @@ VIS.jelly = function(t,v){
   /* oral arms — heavier, shorter, drawn as tapered ribbons */
   for(var q=0;q<JF.arms.length;q++){
     var arm=JF.arms[q];
-    var ax2 = cx + arm.off*rx*0.66, ay2 = lip - Math.abs(arm.off)*ry*0.16;
+    var A1 = rot(cx + arm.off*rx*0.66, lip - Math.abs(arm.off)*ry*0.16);
+    var ax2 = A1[0], ay2 = A1[1];
     ropeStep(arm, ax2, ay2, R*0.125, dt, 0.962, 420, 340, t+40);
     var pts=arm.pts, W2=[];
     for(var w=0;w<pts.length;w++)
@@ -1091,14 +1126,17 @@ VIS.jelly = function(t,v){
   JF.ready = true;
 
   /* bell */
+  var curl = ry*(0.17 + vel*0.42);   // the margin folds under as it contracts
   function bellPath(){
-    var L=cy+ry*0.34;
+    var L=cy+ry*0.34, p;
     g.beginPath();
-    g.moveTo(cx-rx, L);
-    g.bezierCurveTo(cx-rx*1.06, cy-ry*1.16, cx+rx*1.06, cy-ry*1.16, cx+rx, L);
+    p=rot(cx-rx, L); g.moveTo(p[0],p[1]);
+    var c1=rot(cx-rx*1.06, cy-ry*1.16), c2=rot(cx+rx*1.06, cy-ry*1.16), e=rot(cx+rx, L);
+    g.bezierCurveTo(c1[0],c1[1],c2[0],c2[1],e[0],e[1]);
     for(var i2=6;i2>=0;i2--){
-      var x1=cx-rx + (rx*2)*((i2+0.5)/7), x2=cx-rx + (rx*2)*(i2/7);
-      g.quadraticCurveTo(x1, L + ry*0.17*(1+0.25*Math.sin(t*1.4+i2)), x2, L);
+      var q=rot(cx-rx + (rx*2)*((i2+0.5)/7), L + curl*(1+0.28*Math.sin(t*1.4+i2)));
+      var r2=rot(cx-rx + (rx*2)*(i2/7), L);
+      g.quadraticCurveTo(q[0],q[1],r2[0],r2[1]);
     }
     g.closePath();
   }
@@ -1186,12 +1224,12 @@ VIS.aurora = function(t,v){
         (0.66+0.34*n1(un*19.0 + A2.ph*3 + t*0.13));
       if(hh<8) continue;
       var fy=floorY + Math.sin(u*2.6+t*0.20+A2.ph)*24 + Math.sin(u*6.1-t*0.11)*10;
-      var al=(0.075+v*0.105)*(0.45+0.55*n1(un*7.7+A2.ph-t*0.17))*(1+A2.flare*1.1);
+      var al=(0.056+v*0.082)*(0.40+0.60*n1(un*7.7+A2.ph-t*0.17))*(1+A2.flare*1.1);
       soft(u*W + Math.sin(t*0.3+i2)*3, fy - hh*0.46,
            (W/NC)*2.3, hh*0.62, A2.c, al, 0.55);
     }
     soft(W*A2.cx, floorY+4, W*0.5*A2.w, reach*0.024*(0.6+v*0.7),
-         A2.c, (0.10+v*0.12)*(1+A2.flare), 0.35);
+         A2.c, (0.070+v*0.085)*(1+A2.flare), 0.35);
   }
   g.globalCompositeOperation='source-over';
 };
@@ -1202,8 +1240,8 @@ VIS.aurora = function(t,v){
 function preCue(type){
   if(!A || store.timbre==='none') return;
   var c = CUE[type]; if(!c) return;
-  if(store.timbre==='breath'){ swell(c[0]*1.5, c[1]*0.16, 0.7); return; }
-  bowl(c[0]*2, c[1]*0.15, 1.5, 0.05);
+  if(store.timbre==='breath'){ swell(c[0]*1.5, c[1]*0.10, 0.7); return; }
+  bowl(c[0]*2, c[1]*0.085, 1.1, 0.16);
 }
 
 /* ============================ ENGINE ============================ */
@@ -1298,6 +1336,8 @@ function frame(ts){
   LA = 0.66 + (1.00-0.66)*uiT;
 
   g.clearRect(0,0,W,H);
+  /* the companion belongs to the session; the home screen stays quiet */
+  if(!running && !starting){ g.globalAlpha=1; return; }
   g.globalAlpha = LA;
   (VIS[store.vis]||VIS.jelly)(now, lung);
   /* warm the creature toward the category accent — source-atop touches only
@@ -1310,12 +1350,13 @@ function frame(ts){
     g.globalCompositeOperation='source-over';
     g.globalAlpha = LA;
   }
-  /* the visual half of the pre-cue, for anyone running silent */
+  /* the visual half of the pre-cue. Barely there when sound is on — the tone
+     is already doing the job — and only legible when it has to carry it alone. */
   if(cueGlow > 0.01){
-    var rr = Math.min(W,H)*(0.20 + (1-cueGlow)*0.14)*LS*2.2;
-    g.globalAlpha = LA * cueGlow * 0.30;
+    var rr = Math.min(W,H)*(0.20 + (1-cueGlow)*0.12)*LS*2.0;
+    g.globalAlpha = LA * cueGlow * (store.timbre==='none' ? 0.20 : 0.055);
     g.beginPath(); g.arc(W/2, H*LY, rr, 0, 6.283);
-    g.strokeStyle='rgba(255,255,255,.9)'; g.lineWidth=1.4; g.stroke();
+    g.strokeStyle='rgba(255,246,235,.9)'; g.lineWidth=1.1; g.stroke();
   }
   g.globalAlpha = 1;
 }
@@ -1362,7 +1403,7 @@ function applyCat(){
   store.cat = cat; store.pat = sel.id; save();
   mins = minutesFor(cat);
   elMinInput.value = mins;
-  renderChips(); renderStage(); renderMins();
+  renderChips(); renderStage(); renderMins(); flashShape();
 }
 
 function renderChips(){
@@ -1375,50 +1416,113 @@ function renderChips(){
   });
 }
 
-var DOT_SPREAD = 42;   // degrees between neighbouring patterns on the ring
+/* A "world" is the companion and the voice chosen together — the thing the ring
+   turns through. Settings can still set either half on its own; when the pair
+   stops matching a named world the band just reads CUSTOM. */
+var WORLDS = [
+  {id:'drift',  n:'Drifter', vis:'jelly',  timbre:'bowls',   c:['#7fd8d0','#5a86d8']},
+  {id:'aurora', n:'Aurora',  vis:'aurora', timbre:'glass',   c:['#8ef0c4','#a97fd6']},
+  {id:'ink',    n:'Ink',     vis:'ink',    timbre:'handpan', c:['#7ec8ff','#c9a0ff']},
+  {id:'bloom',  n:'Bloom',   vis:'bloom',  timbre:'breath',  c:['#ffcf9a','#ff9ec0']}
+];
+function worldIndex(){
+  for(var i=0;i<WORLDS.length;i++)
+    if(WORLDS[i].vis===store.vis && WORLDS[i].timbre===store.timbre) return i;
+  return -1;
+}
+function setWorld(i){
+  var w = WORLDS[((i%WORLDS.length)+WORLDS.length)%WORLDS.length];
+  store.vis=w.vis; store.timbre=w.timbre; save();
+  if(w.vis==='jelly') ropeInit();
+  paintWorld();
+  if(store.timbre!=='none'){ initAudio(); cue('in',4); }
+}
+function paintWorld(){
+  var i=worldIndex(), w = i<0 ? null : WORLDS[i];
+  document.getElementById('wg0').setAttribute('stop-color', w?w.c[0]:'#8a8496');
+  document.getElementById('wg1').setAttribute('stop-color', w?w.c[1]:'#5d5768');
+  var vm=null, tm=null, j;
+  for(j=0;j<VIS_META.length;j++) if(VIS_META[j].id===store.vis) vm=VIS_META[j];
+  for(j=0;j<TIMBRES.length;j++)  if(TIMBRES[j].id===store.timbre) tm=TIMBRES[j];
+  document.getElementById('dWorld').textContent =
+    w ? (w.n + ' · ' + tm.n) : ((vm?vm.n:'—') + ' · ' + (tm?tm.n:'—'));
+}
+
+var MIN_R = 163, C_MIN = 2*Math.PI*MIN_R;
 function renderStage(){
   var isList = (cat==='all');
   elList.style.display = isList ? 'block' : 'none';
-  ['dialSvg','dialFace','chevL','chevR','tapWhy'].forEach(function(id){
+  ['dialSvg','dialFace','tapWhy'].forEach(function(id){
     document.getElementById(id).style.display = isList ? 'none' : '';
   });
   if(isList) renderList(); else renderDial();
 }
 
+/* sixty ticks, because the outer ring is now a minute scale */
 (function(){
-  var t=document.getElementById('ticks'), out='';
-  for(var i=0;i<72;i++){
-    var a=(i/72)*Math.PI*2-Math.PI/2, maj=(i%6===0), r1=171, r2=maj?159:165;
+  var t=document.getElementById('mTicks'), out='';
+  for(var i=0;i<60;i++){
+    var a=(i/60)*Math.PI*2-Math.PI/2, maj=(i%5===0), r1=155, r2=maj?145:150;
     out+='<line x1="'+(175+Math.cos(a)*r1).toFixed(1)+'" y1="'+(175+Math.sin(a)*r1).toFixed(1)+
          '" x2="'+(175+Math.cos(a)*r2).toFixed(1)+'" y2="'+(175+Math.sin(a)*r2).toFixed(1)+
-         '" stroke="rgba(246,239,231,.30)" stroke-width="1.5" stroke-linecap="round" opacity="'+
-         (maj?.45:.18)+'"/>';
+         '" stroke="rgba(246,239,231,.34)" stroke-width="1.4" stroke-linecap="round" opacity="'+
+         (maj?.42:.15)+'"/>';
   }
   t.innerHTML=out;
 })();
 
+/* the shape of what you just chose, shown between the dial and the clock and
+   then got out of the way */
+var shapeTmr=0;
+function flashShape(){
+  var s=document.getElementById('shapeStrip');
+  s.innerHTML = glyph(sel, 300, 44, false);
+  s.classList.add('on');
+  clearTimeout(shapeTmr);
+  shapeTmr = setTimeout(function(){ s.classList.remove('on'); }, 2800);
+}
+
+function paintMinutes(){
+  var frac = Math.max(0, Math.min(1, mins/60));
+  document.getElementById('mArc')
+    .setAttribute('stroke-dasharray', C_MIN);
+  document.getElementById('mArc')
+    .setAttribute('stroke-dashoffset', (C_MIN*(1-frac)).toFixed(1));
+  var a=(frac*360-90)*Math.PI/180, k=document.getElementById('mKnob');
+  k.setAttribute('cx', (175+Math.cos(a)*MIN_R).toFixed(1));
+  k.setAttribute('cy', (175+Math.sin(a)*MIN_R).toFixed(1));
+  var off = sel.once;
+  document.getElementById('mArc').style.opacity = off ? 0 : .9;
+  k.style.opacity = off ? 0 : 1;
+}
+
 function renderDial(){
-  var n=list.length;
-  var dots=document.getElementById('dots'), out='';
+  var n=list.length, dots=document.getElementById('dots'), out='';
   for(var i=0;i<n;i++){
-    var a=(-90 + (i-idx)*DOT_SPREAD) * Math.PI/180;
-    var x=175+Math.cos(a)*152, y=175+Math.sin(a)*152;
+    /* equidistant around the whole ring, all one colour — position carries no
+       meaning, so there is no lopsided side */
+    var a=(-90 + i*(360/n)) * Math.PI/180;
+    var x=(175+Math.cos(a)*134).toFixed(1), y=(175+Math.sin(a)*134).toFixed(1);
     var on=(i===idx);
-    out += '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(on?11:6)+'" fill="'+
-      (on?'var(--acc)':'rgba(246,239,231,.30)')+'"'+
-      (on?' stroke="rgba(10,6,16,.9)" stroke-width="4"':'')+'/>';
+    if(on) out += '<circle class="halo" cx="'+x+'" cy="'+y+'" r="10" fill="var(--acc)"/>';
+    out += '<circle cx="'+x+'" cy="'+y+'" r="'+(on?8.5:7)+'" fill="var(--acc)" opacity="'+
+           (on?1:.34)+'"/>';
+    out += '<circle class="hit" data-i="'+i+'" cx="'+x+'" cy="'+y+'" r="27"/>';
   }
   dots.innerHTML=out;
-  dots.style.transform='rotate(0deg)';
-  document.getElementById('posLabel').textContent =
-    (idx+1)+' / '+n+'  ·  '+cat.toUpperCase();
   document.getElementById('dEye').textContent = sel.badge;
   document.getElementById('dNm').textContent = sel.name;
   document.getElementById('dRh').textContent = sel.rhythm;
-  document.getElementById('dGl').innerHTML = glyph(sel, 118, 34, false);
   document.getElementById('dMore').textContent =
     sel.tags.indexOf('dive')>=0 ? 'TAP FOR SAFETY NOTE' : 'TAP FOR WHY';
+  paintWorld(); paintMinutes();
 }
+document.getElementById('dots').addEventListener('click', function(e){
+  var h=e.target.closest('.hit'); if(!h) return;
+  var i=+h.dataset.i; if(i===idx) return;
+  idx=i; sel=list[i]; store.pat=sel.id; save();
+  renderDial(); renderMins(); flashShape();
+});
 
 function renderList(){
   elList.innerHTML='';
@@ -1436,41 +1540,45 @@ function renderList(){
   });
 }
 
-function step(dir){
-  if(!list.length) return;
-  idx = (idx + dir + list.length) % list.length;
-  sel = list[idx]; store.pat = sel.id; save();
-  renderDial(); renderMins();
-}
-document.getElementById('chevL').onclick=function(){ step(-1); };
-document.getElementById('chevR').onclick=function(){ step(1); };
 
-/* drag around the ring; it snaps, and the chevrons do the same job for
-   anyone who would rather tap than trace */
+
+/* Two rings, two jobs. Which one you get is decided by how far from the centre
+   your finger lands: the outer band is the length, the inner band is the world. */
 (function(){
-  var active=false, lastA=0, acc=0, moved=0;
-  function ang(e){
+  var mode=null, lastA=0, acc=0, moved=0;
+  function polar(e){
     var r=elDial.getBoundingClientRect();
     var t=(e.touches?e.touches[0]:e);
-    return Math.atan2(t.clientY-(r.top+r.height/2), t.clientX-(r.left+r.width/2))*180/Math.PI;
+    var dx=t.clientX-(r.left+r.width/2), dy=t.clientY-(r.top+r.height/2);
+    var scale = 350/r.width;                       // svg units, not css pixels
+    return {a:Math.atan2(dy,dx)*180/Math.PI, r:Math.sqrt(dx*dx+dy*dy)*scale};
   }
-  function down(e){ if(cat==='all') return; active=true; lastA=ang(e); acc=0; moved=0;
-    document.getElementById('dots').style.transition='none'; }
+  function down(e){
+    if(cat==='all') return;
+    var p=polar(e);
+    mode = p.r>148 ? 'min' : (p.r>120 ? 'world' : null);
+    if(mode==='min' && sel.once) mode=null;
+    lastA=p.a; acc=0; moved=0;
+  }
   function move(e){
-    if(!active) return;
-    var a=ang(e), d=a-lastA;
+    if(!mode) return;
+    var p=polar(e), d=p.a-lastA;
     while(d>180) d-=360; while(d<-180) d+=360;
-    lastA=a; acc+=d; moved+=Math.abs(d);
-    if(moved>6 && e.cancelable) e.preventDefault();
-    while(acc >  DOT_SPREAD){ acc -= DOT_SPREAD; step(1);  document.getElementById('dots').style.transition='none'; }
-    while(acc < -DOT_SPREAD){ acc += DOT_SPREAD; step(-1); document.getElementById('dots').style.transition='none'; }
-    document.getElementById('dots').style.transform='rotate('+acc.toFixed(2)+'deg)';
+    lastA=p.a; moved+=Math.abs(d);
+    if(moved>7 && e.cancelable) e.preventDefault();
+    if(mode==='min'){
+      if(moved<5) return;
+      var v = Math.round(((p.a+90+360)%360)/6);    // a clock face: one turn, sixty minutes
+      if(v<1) v=1; if(v>60) v=60;
+      if(v!==mins){ mins=v; setMinutes(cat,mins); elMinInput.value=mins;
+                    paintMinutes(); renderMins(); }
+    } else {
+      acc+=d;
+      while(acc >  50){ acc-=50; setWorld(worldIndex()+1); }
+      while(acc < -50){ acc+=50; setWorld(worldIndex()-1); }
+    }
   }
-  function up(){
-    if(!active) return; active=false;
-    var d=document.getElementById('dots');
-    d.style.transition=''; d.style.transform='rotate(0deg)';
-  }
+  function up(){ mode=null; }
   elDial.addEventListener('touchstart',down,{passive:true});
   elDial.addEventListener('touchmove',move,{passive:false});
   elDial.addEventListener('touchend',up,{passive:true});
@@ -1504,7 +1612,7 @@ function renderMins(){
   } else {
     elMinInput.value = mins;
     document.getElementById('deft').textContent =
-      'your '+cat+' default · tap to type';
+      'turn the outer ring, or type it';
   }
   var real = realLength(sel, mins*60);
   document.getElementById('lede2').innerHTML = fixed
@@ -1515,7 +1623,7 @@ function renderMins(){
 function bump(d){
   if(sel.once) return;
   mins = Math.max(1, Math.min(60, mins + d));
-  setMinutes(cat, mins); elMinInput.value = mins; renderMins();
+  setMinutes(cat, mins); elMinInput.value = mins; renderMins(); paintMinutes();
 }
 (function(){
   [['minus',-1],['plus',1]].forEach(function(pair){
@@ -1536,7 +1644,7 @@ elMinInput.addEventListener('blur', function(){
   var v = parseInt(this.value,10);
   if(!(v>0)) v = minutesFor(cat);
   mins = Math.max(1, Math.min(60, v));
-  setMinutes(cat, mins); this.value = mins; renderMins();
+  setMinutes(cat, mins); this.value = mins; renderMins(); paintMinutes();
 });
 
 /* ============================ SESSION ============================ */
@@ -1664,16 +1772,15 @@ function renderStats(){
 (function(){
   var btn=document.getElementById('goBtn'), fill=document.getElementById('goFill');
   var t0=0, raf=0, held=false;
-  var NEED=620;
+  var NEED=0;
   function tickFill(){
     var p=Math.min(1,(performance.now()-t0)/NEED);
     fill.style.width=(p*100)+'%';
     if(p>=1){ held=true; fill.style.width='0%'; start(); return; }
     raf=requestAnimationFrame(tickFill);
   }
-  function down(e){ e.preventDefault(); held=false; t0=performance.now();
-    initAudio(); unlockSilent(); raf=requestAnimationFrame(tickFill); }
-  function up(){ cancelAnimationFrame(raf); if(!held) fill.style.width='0%'; }
+  function down(e){ e.preventDefault(); initAudio(); unlockSilent(); start(); }
+  function up(){ cancelAnimationFrame(raf); fill.style.width='0%'; }
   btn.addEventListener('touchstart',down,{passive:false});
   btn.addEventListener('touchend',up); btn.addEventListener('touchcancel',up);
   btn.addEventListener('mousedown',down);
@@ -1759,10 +1866,11 @@ function renderSettings(){
   document.getElementById('gVis').onclick=function(e){
     var o=e.target.closest('.opt'); if(!o) return;
     store.vis=o.dataset.k; if(store.vis==='jelly') ropeInit(); save(); renderSettings();
+    if(cat!=='all') paintWorld();
   };
   document.getElementById('gTim').onclick=function(e){
     var o=e.target.closest('.opt'); if(!o) return;
-    store.timbre=o.dataset.k; save(); renderSettings();
+    store.timbre=o.dataset.k; save(); renderSettings(); if(cat!=='all') paintWorld();
     if(store.timbre!=='none'){ initAudio(); cue('in',4); }
   };
   document.getElementById('gBed').onclick=function(e){

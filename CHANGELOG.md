@@ -2,6 +2,32 @@
 
 Newest first. Dates are when the change landed in the repo.
 
+## 2026-08-30 — Three rings, three jobs
+
+Refinement of the dial after first use.
+
+- **The ring now does two things at two radii.** Outer band sets the length —
+  sixty ticks that are a real minute scale, an arc filling from twelve o'clock.
+  Inner band turns through *worlds*: companion and voice as a matched pair, with
+  the band painted in that world's colours as a preview of what you are about to
+  see and hear.
+- **Protocol dots are static and tapped**, equidistant around the inner band, all
+  one colour, the live one breathing at six a minute. Carets gone — the control
+  no longer needs a caption to explain itself.
+- **A shape strip** flashes the chosen pattern between the dial and the clock for
+  under three seconds, then clears, so the rhythm is confirmed without
+  permanently occupying the screen.
+- **The bell swims.** Squash and stretch were a tenth each and inverted, so it got
+  wider as it emptied. Now it narrows and elongates on the squeeze, the margin
+  folds under, a jet pushes it up on the contraction, and it leans into its own
+  drift carrying the tentacle roots with it — which is what stopped the tail
+  looking bolted on.
+- **Begin is a tap**, not a hold. The hold was ceremony pretending to be accident
+  prevention.
+- **Pre-cue down to 57%** with a slower attack, and its companion ring nearly
+  invisible unless the voice is set to None and it has to carry the cue alone.
+- Companion removed from the home screen; it belongs to the session.
+
 ## 2026-08-30 — The dial
 
 Whole interface rebuilt. The old vertical list read as a web page; this reads as
