@@ -95,6 +95,11 @@ a session never stops mid-out-breath. Dive tables ignore it — they set their o
 ## Things that look like mistakes but are not
 
 - **System fonts, not Google Fonts.** The app must work offline.
+- **"No audio files" is stricter than the real constraint.** The real rule is
+  *no external requests*. A recorded breath inlined as a base64 data URI would
+  not break offline use — it would cost roughly 30 KB per sample against a
+  123 KB app. That is a size choice, not a correctness one, and it is worth
+  reconsidering if synthesis ever stops being good enough.
 - **The base64 PNG in `<head>`.** That is the Home Screen icon; it has to be
   inline for the same reason.
 - **The one-second silent WAV.** iOS mutes Web Audio when the ringer switch is
@@ -108,6 +113,29 @@ a session never stops mid-out-breath. Dive tables ignore it — they set their o
   intense than plain maximal holds. That honesty is the point of the app, not an
   oversight. Two patterns have already been cut for failing it — 4-7-8 and a
   "Charge" upregulation pattern. Do not quietly reinstate them.
+
+## Sound is measured, not adjusted by feel
+
+I cannot hear the app. Neither can anyone reviewing a diff. When a sound changes,
+render the old and new versions through an `OfflineAudioContext` in headless
+Chromium, dump the samples, and compare spectra in numpy — `audit.js` and
+`an*.py` do exactly this and are worth keeping.
+
+The thing to measure against is the **shruti bed**. It is the loudest and
+harmonically densest background, so anything that survives it survives the
+others. Two lessons already paid for:
+
+- **Match the analysis band to where the sound actually lives.** A first pass
+  put band edges at 1200 Hz, straight through the metronome's peak, and
+  concluded the change had made things worse by 13 dB. Re-measured on the
+  sound's real band it was 12 dB better. Band edges are not neutral.
+- **"Too quiet" is often "same pitch as the bed."** The pre-cue's old
+  fundamental was 293.7 Hz; the shruti's third harmonic is 293.66 Hz. No amount
+  of gain would have separated them. Check for collisions with the bed's
+  partials before reaching for the volume.
+
+Cues that must be heard over the bed get `duckBed()`. The metronome deliberately
+does not — ducking once a second would make the bed pump.
 
 ## Safety content is not decoration
 

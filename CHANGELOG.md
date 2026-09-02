@@ -2,6 +2,41 @@
 
 Newest first. Dates are when the change landed in the repo.
 
+## 2026-09-02 — Pause, an elapsed ring, and three sounds measured
+
+From a session on the phone. The three audio changes were rendered offline
+through a real Web Audio graph and compared spectrally against the shruti bed —
+the loudest, densest background, and the one they failed under — rather than
+adjusted by guesswork. Figures below are measured, not claimed.
+
+- **The breath voice no longer sounds like weather.** It was one wide bandpass
+  with a lowpass at 1900 Hz, which is a wind machine. It is now two narrow
+  formants that glide in opposite directions with the breath, rolled off at
+  980 Hz. Energy above 2 kHz is down **25 dB**, the spectral centroid drops from
+  551 Hz to 347 Hz, and the swell now sits **9.5 dB under the bed** instead of
+  4.3 dB — it is a breath behind the room, not in front of it.
+- **The pre-cue was not quiet, it was invisible.** Its old pitch was 293.7 Hz —
+  the same pitch as the shruti's own third harmonic, to within 0.3 Hz. Not
+  masked: identical. It has moved a minor third up, to 349 Hz, which is a chord
+  tone against the drone's D and lands in a spectral hole (the bed has no
+  measurable energy there), and it ducks the bed 34% for half a second as it
+  strikes. Margin over the bed in its own band: **+0.1 dB before, +19.8 dB
+  after**, plus 3.6 dB from the duck.
+- **The metronome moved to where the ear lives.** A 155 Hz sine pluck sat in the
+  bed's loudest region and 3.7 dB over it, at a frequency the ear is least
+  sensitive to. It is now a short 1240→780 Hz chirp with a noise transient:
+  **+15.7 dB over the bed**, in the band hearing is sharpest in.
+- **The metronome now has a visual pulse.** It never had one — that was a gap,
+  not a setting. A small tinted pip breathes at the foot of the screen on each
+  beat, so the pulse still reads with the sound off.
+- **Pause.** End is no longer the only exit. Pause stops the clock, fades the
+  bed, releases the wake lock and marks the screen PAUSED; resuming shifts the
+  session start so the paused time is never counted. Both are pill buttons now,
+  reachable by tapping the screen.
+- **An elapsed ring that breathes.** A thin arc around the companion, filling
+  from twelve o'clock, whose width and glow rise and fall with the current
+  breath rather than sweeping flat. The old linear progress bar is gone.
+
 ## 2026-09-02 — The clicking
 
 **Fixed: the audio-unlock clip was not silent.** 8-bit WAV samples are unsigned,

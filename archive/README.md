@@ -34,3 +34,9 @@ git show <commit>:index.html > archive/YYYY-MM-DD-<name>.html
 
 Each file is around 100 KB, so a dozen generations costs about a megabyte. That
 is not a reason to skip it.
+
+## 2026-09-01-pre-audio-fixes.html
+
+The build his daughter used the night the notes were written. Kept for A/B
+against the measured audio changes: breath timbre, pre-cue pitch, metronome
+placement. Everything else is identical to the current app.

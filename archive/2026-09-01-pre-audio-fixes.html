@@ -173,16 +173,12 @@
   #ptimer i{display:block;font-style:normal;font-size:10.5px;letter-spacing:.22em;
     text-transform:uppercase;color:rgba(246,239,231,.22);margin-top:9px;}
   #sess{justify-content:flex-end;align-items:center;}
-  #chrome{opacity:0;transition:opacity .5s;display:flex;gap:10px;align-items:center;}
+  #chrome{opacity:0;transition:opacity .5s;}
   #chrome.show{opacity:1;}
-  #chrome > div{font-size:12px;letter-spacing:.22em;text-transform:uppercase;
-    color:var(--tx2);padding:14px 24px;cursor:pointer;border-radius:14px;
-    border:1px solid var(--edge);background:var(--surf);}
-  #chrome > div:active{background:rgba(255,240,220,.14);}
-  #pausedTag{position:fixed;left:0;right:0;top:calc(var(--safe-t) + 28px);text-align:center;
-    font-size:11px;font-weight:700;letter-spacing:.3em;color:var(--tx3);
-    opacity:0;transition:opacity .4s;pointer-events:none;}
-  #pausedTag.on{opacity:1;}
+  #stop{font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--tx2);
+    padding:14px 26px;cursor:pointer;}
+  #prog{position:fixed;left:0;bottom:0;height:2px;width:0;
+    background:linear-gradient(90deg,transparent,var(--acc));}
 
   /* ---------- sheets ---------- */
   #sheetScrim{position:fixed;inset:0;background:rgba(4,2,8,.6);opacity:0;
@@ -304,13 +300,7 @@
   <div class="stats"><span id="stTotal"></span><span id="stStreak"></span></div>
 </div>
 
-<div class="screen hide" id="sess">
-  <div id="chrome">
-    <div id="pauseBtn">Pause</div>
-    <div id="stop">End</div>
-  </div>
-</div>
-<div id="pausedTag">PAUSED</div>
+<div class="screen hide" id="sess"><div id="chrome"><div id="stop">End</div></div></div>
 <div id="intro">
   <div class="iname" id="iName"></div>
   <div class="iglyph" id="iGlyph"></div>
@@ -633,45 +623,25 @@ function cue(type, dur){
   if(dur < 1.0){ if(type==='out') puff(dur); return; }
   var c = CUE[type]; if(!c) return;
   var amp = c[1], ring = Math.min(c[2], dur + 3.0);
-  if(store.timbre==='breath'){
-    swell(c[0], amp*0.42, Math.min(dur*0.9, 4.0),
-          (type==='in'||type==='in2') ? 1 : -1);
-    return;
-  }
+  if(store.timbre==='breath'){ swell(c[0], amp*0.9, Math.min(dur*0.9, 4.0)); return; }
   bowl(c[0], amp, ring);
 }
 
-/* The airy voice. Broadband noise through one wide bandpass is wind; breath is
-   two narrow resonances with the top rolled well off, moving as the air moves. */
-function swell(freq, amp, dur, dir){
+/* the airy voice: a filtered swell of breath instead of a struck tone */
+function swell(freq, amp, dur){
   if(!A || !noiseBuf) return;
-  var t=A.currentTime, d=Math.max(0.25,dur);
+  var t=A.currentTime;
   var src=A.createBufferSource(); src.buffer=noiseBuf; src.loop=true;
-
-  var f1=A.createBiquadFilter(); f1.type='bandpass'; f1.Q.value=5.4;
-  var f2=A.createBiquadFilter(); f2.type='bandpass'; f2.Q.value=3.4;
-  var a1=freq*(dir<0?1.28:0.86), b1=freq*(dir<0?0.86:1.28);
-  f1.frequency.setValueAtTime(a1,t);
-  f1.frequency.exponentialRampToValueAtTime(b1,t+d);
-  f2.frequency.setValueAtTime(a1*2.7,t);
-  f2.frequency.exponentialRampToValueAtTime(b1*2.7,t+d);
-
-  var g1=A.createGain(); g1.gain.value=1.0;
-  var g2=A.createGain(); g2.gain.value=0.40;
-  /* the hiss above a kilohertz is what made it sound like weather */
-  var lp=A.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=980; lp.Q.value=0.6;
-  var hp=A.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=110;
-
+  var bp=A.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=1.4;
+  bp.frequency.value = freq*2.4;
+  var lp=A.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=1900;
   var gp=A.createGain();
   gp.gain.setValueAtTime(0.0001,t);
-  gp.gain.exponentialRampToValueAtTime(Math.max(0.0002,amp), t+d*0.44);
-  gp.gain.exponentialRampToValueAtTime(0.0001, t+d+1.1);
-
-  src.connect(f1); f1.connect(g1); g1.connect(hp);
-  src.connect(f2); f2.connect(g2); g2.connect(hp);
-  hp.connect(lp); lp.connect(gp); gp.connect(master);
-  var vg=A.createGain(); vg.gain.value=0.30; gp.connect(vg); vg.connect(A.verbIn);
-  src.start(t); src.stop(t+d+1.4);
+  gp.gain.exponentialRampToValueAtTime(amp*0.55, t+dur*0.42);
+  gp.gain.exponentialRampToValueAtTime(0.0001, t+dur+1.4);
+  src.connect(bp); bp.connect(lp); lp.connect(gp); gp.connect(master);
+  var vg=A.createGain(); vg.gain.value=0.42; gp.connect(vg); vg.connect(A.verbIn);
+  src.start(t); src.stop(t+dur+1.7);
 }
 
 /* a short breath of air for the sharp exhales */
@@ -691,46 +661,19 @@ function puff(dur){
   src.start(t); src.stop(t+dur+0.2);
 }
 
-/* Metronome. The old one was a 155 Hz pluck under a 760 Hz lowpass — sitting
-   in exactly the band the drone already occupies, which is why it vanished.
-   This is a small woodblock an octave and a half above the bed. */
+/* metronome: a soft muted pluck on the second, well under the tone */
 function tick(){
   if(!A || !store.metro) return;
   var t=A.currentTime;
-  var o=A.createOscillator(); o.type='sine';
-  o.frequency.setValueAtTime(1240,t);
-  o.frequency.exponentialRampToValueAtTime(780, t+0.055);
-  var bp=A.createBiquadFilter(); bp.type='bandpass';
-  bp.frequency.value=1150; bp.Q.value=1.9;
+  var o=A.createOscillator(); o.type='sine'; o.frequency.value=155.6;
+  var lp=A.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=760; lp.Q.value=0.7;
   var g2=A.createGain();
   g2.gain.setValueAtTime(0.0001,t);
-  g2.gain.exponentialRampToValueAtTime(0.105, t+0.006);
-  g2.gain.exponentialRampToValueAtTime(0.0001, t+0.19);
-  o.connect(bp); bp.connect(g2); g2.connect(master);
-  /* a breath of noise gives it the knock; kept dry so it does not smear */
-  if(noiseBuf){
-    var ns=A.createBufferSource(); ns.buffer=noiseBuf; ns.loop=true;
-    var nf=A.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=2100; nf.Q.value=1.2;
-    var ng=A.createGain();
-    ng.gain.setValueAtTime(0.0001,t);
-    ng.gain.exponentialRampToValueAtTime(0.030, t+0.004);
-    ng.gain.exponentialRampToValueAtTime(0.0001, t+0.075);
-    ns.connect(nf); nf.connect(ng); ng.connect(master);
-    ns.start(t); ns.stop(t+0.12);
-  }
-  var vg=A.createGain(); vg.gain.value=0.16; g2.connect(vg); vg.connect(A.verbIn);
-  o.start(t); o.stop(t+0.28);
-}
-
-/* Dip the bed for a moment so a cue can be heard through it without having to
-   be loud. Costs nothing and works under every background. */
-function duckBed(amount, hold){
-  if(!drone || !droneGain) return;
-  var t=A.currentTime, cur=droneGain.gain.value;
-  droneGain.gain.cancelScheduledValues(t);
-  droneGain.gain.setValueAtTime(cur, t);
-  droneGain.gain.linearRampToValueAtTime(cur*(1-amount), t+0.10);
-  droneGain.gain.linearRampToValueAtTime(cur, t+0.10+hold);
+  g2.gain.exponentialRampToValueAtTime(0.055, t+0.014);
+  g2.gain.exponentialRampToValueAtTime(0.0001, t+0.50);
+  o.connect(lp); lp.connect(g2); g2.connect(master);
+  var vg=A.createGain(); vg.gain.value=0.30; g2.connect(vg); vg.connect(A.verbIn);
+  o.start(t); o.stop(t+0.6);
 }
 
 function startDrone(){
@@ -1298,35 +1241,20 @@ VIS.aurora = function(t,v){
 };
 
 /* ============================ THE PRE-CUE ============================
-   One second before the change, a hint of what is coming.
-
-   The first version was the same note an octave up at a fraction of the main
-   cue's gain. An octave is the same pitch class, so under a harmonically dense
-   bed like the shruti it sat inside the drone's own overtones and disappeared —
-   and because its level was a fraction of each phase's amplitude it was louder
-   before an inhale than before an exhale. This one is a minor third above the
-   octave (a different pitch class, still in D minor), always the same absolute
-   level whichever direction it announces, and it ducks the bed briefly rather
-   than shouting over it. */
-var THIRD = Math.pow(2, 3/12);
+   A hint of the tone that is coming, one second before it arrives, so nobody
+   has to count. Quiet, short, and at the pitch of the phase about to start. */
 function preCue(type){
   if(!A || store.timbre==='none') return;
   var c = CUE[type]; if(!c) return;
-  duckBed(0.34, 0.55);
-  var f = c[0] * 2 * THIRD;
-  if(store.timbre==='breath'){ swell(f*0.5, 0.085, 0.55, 1); return; }
-  /* always the bright voice, so audibility does not change with the setting */
-  var keep = store.timbre; store.timbre = 'glass';
-  bowl(f, 0.150, 1.25, 0.05);
-  store.timbre = keep;
+  if(store.timbre==='breath'){ swell(c[0]*1.5, c[1]*0.10, 0.7); return; }
+  bowl(c[0]*2, c[1]*0.085, 1.1, 0.16);
 }
 
 /* ============================ ENGINE ============================ */
 var running=false, startT=0, targetSec=0, hardCap=0, phaseIdx=0, phaseT=0;
 var lungFrom=0, lung=0, lungTo=1, preCued=false, cueGlow=0;
 var idlePhase=0, lastFrame=0, wake=null, dbTick=0, starting=false, uiT=0;
-var lastTick=-1, lastShown=-1, metroGlow=0;
-var paused=false, pausedAt=0;
+var lastTick=-1, lastShown=-1;
 var PHASE_NAME = {'in':'breathe in','in2':'top up','hold':'hold',
                   'out':'breathe out','holdout':'empty'};
 
@@ -1366,7 +1294,7 @@ function frame(ts){
   var dt = lastFrame ? Math.min(now-lastFrame, .1) : .016;
   lastFrame = now;
 
-  if(running && !paused){
+  if(running){
     phaseT += dt;
     var ph = sel.phases[phaseIdx];
     var pr = Math.min(1, phaseT/ph.s);
@@ -1391,7 +1319,7 @@ function frame(ts){
     var el = now - startT;
     if(el > hardCap){ finish(); return; }
     var sec = Math.floor(el);
-    if(sec !== lastTick){ lastTick = sec; if(sec>0){ tick(); metroGlow = 1; } }
+    if(sec !== lastTick){ lastTick = sec; if(sec>0) tick(); }
     if(sel.timer){
       var left = Math.max(0, Math.ceil(ph.s - phaseT));
       if(left !== lastShown){
@@ -1399,13 +1327,13 @@ function frame(ts){
         elTimer.innerHTML = left + '<i>' + PHASE_NAME[ph.t] + '</i>';
       }
     }
-  } else if(!running){
+    elProg.style.width = Math.min(100, el/targetSec*100)+'%';
+  } else {
     idlePhase += dt/10;
     lung = 0.12 + (0.5 - 0.5*Math.cos(idlePhase*Math.PI*2))*0.5;
   }
 
   cueGlow = Math.max(0, cueGlow - dt*1.15);
-  metroGlow = Math.max(0, metroGlow - dt*3.2);
 
   var tgt = (running||starting) ? 1 : 0;
   uiT += (tgt-uiT) * Math.min(1, dt*1.6);
@@ -1428,52 +1356,22 @@ function frame(ts){
     g.globalCompositeOperation='source-over';
     g.globalAlpha = LA;
   }
-  /* the visual half of the pre-cue, kept small and close so it does not collide
-     with the elapsed ring further out */
+  /* the visual half of the pre-cue. Barely there when sound is on — the tone
+     is already doing the job — and only legible when it has to carry it alone. */
   if(cueGlow > 0.01){
-    var rr = Math.min(W,H)*(0.22 + (1-cueGlow)*0.09);
-    g.globalAlpha = LA * cueGlow * (store.timbre==='none' ? 0.22 : 0.06);
+    var rr = Math.min(W,H)*(0.20 + (1-cueGlow)*0.12)*LS*2.0;
+    g.globalAlpha = LA * cueGlow * (store.timbre==='none' ? 0.20 : 0.055);
     g.beginPath(); g.arc(W/2, H*LY, rr, 0, 6.283);
     g.strokeStyle='rgba(255,246,235,.9)'; g.lineWidth=1.1; g.stroke();
   }
   g.globalAlpha = 1;
-
-  /* The elapsed ring. Not a clockwise sweep laid over the animation but part of
-     it: the arc thickens and brightens as the lungs fill and thins as they
-     empty, so the progress indicator is breathing too. */
-  if(running){
-    var eR = Math.min(W,H)*0.455, el2 = (performance.now()/1000 - startT);
-    var frac2 = Math.max(0, Math.min(1, el2/targetSec));
-    g.beginPath(); g.arc(W/2, H*LY, eR, 0, 6.283);
-    g.strokeStyle='rgba(246,239,231,.055)'; g.lineWidth=1.4; g.stroke();
-    if(frac2 > 0.0015){
-      g.beginPath();
-      g.arc(W/2, H*LY, eR, -Math.PI/2, -Math.PI/2 + frac2*6.2832);
-      g.strokeStyle = TINT.c;
-      g.globalAlpha = (paused ? 0.22 : 0.20 + lung*0.30);
-      g.lineWidth = 1.6 + lung*2.6;
-      g.lineCap='round'; g.stroke();
-      g.globalAlpha = 1;
-    }
-  }
-
-  /* the metronome made visible: a pip on the second, for anyone who has the
-     sound off or cannot pick it out of the bed */
-  if(store.metro && metroGlow > 0.02 && running){
-    g.globalAlpha = metroGlow * 0.55;
-    g.fillStyle = TINT.c;
-    g.beginPath();
-    g.arc(W/2, H - 46, 2.5 + metroGlow*2.2, 0, 6.283);
-    g.fill();
-    g.globalAlpha = 1;
-  }
 }
 
 /* ============================ ELEMENTS ============================ */
 var elHome=document.getElementById('home'), elSess=document.getElementById('sess'),
     elIntro=document.getElementById('intro'), elCount=document.getElementById('count'),
     elChrome=document.getElementById('chrome'), elTimer=document.getElementById('ptimer'),
-    elScrim=document.getElementById('scrim'),
+    elProg=document.getElementById('prog'), elScrim=document.getElementById('scrim'),
     elSheetScrim=document.getElementById('sheetScrim'),
     elWhy=document.getElementById('whySheet'), elSet=document.getElementById('setSheet'),
     elDone=document.getElementById('doneSheet'),
@@ -1786,10 +1684,8 @@ function start(){
       hardCap = targetSec + 120;
       startT = performance.now()/1000;
       lung=0; phaseIdx=0; lastTick=-1; lastShown=-1;
+      elProg.style.width='0%';
       elTimer.classList.toggle('show', !!sel.timer);
-      paused=false;
-      document.getElementById('pausedTag').classList.remove('on');
-      document.getElementById('pauseBtn').textContent='Pause';
       startDrone(); beginPhase(0); requestWake();
       return;
     }
@@ -1801,11 +1697,10 @@ function start(){
 function finish(){ endSession(true); }
 function endSession(complete){
   if(!running) return;
-  running = false; paused = false;
-  document.getElementById('pausedTag').classList.remove('on');
+  running = false;
   var el = performance.now()/1000 - startT;
   releaseWake(); stopDrone();
-  elChrome.classList.remove('show');
+  elProg.style.width='0%'; elChrome.classList.remove('show');
   elTimer.classList.remove('show'); elScrim.classList.remove('clear');
   var secs = Math.round(Math.min(el, hardCap));
   var earned = record(secs);
@@ -1898,32 +1793,6 @@ function renderStats(){
   window.addEventListener('mouseup',up);
 })();
 
-function setPaused(p){
-  if(!running || paused===p) return;
-  paused = p;
-  var tag=document.getElementById('pausedTag');
-  var btn=document.getElementById('pauseBtn');
-  if(p){
-    pausedAt = performance.now()/1000;
-    stopDrone();
-    releaseWake();
-    tag.classList.add('on');
-    btn.textContent='Resume';
-    elChrome.classList.add('show'); clearTimeout(elSess._t);
-  } else {
-    /* the clock has to forget the gap, or a pause would eat the session */
-    var gap = performance.now()/1000 - pausedAt;
-    startT += gap;
-    lastTick = Math.floor(performance.now()/1000 - startT);
-    startDrone(); requestWake();
-    tag.classList.remove('on');
-    btn.textContent='Pause';
-    elSess._t=setTimeout(function(){ elChrome.classList.remove('show'); }, 3600);
-  }
-}
-document.getElementById('pauseBtn').onclick=function(e){
-  e.stopPropagation(); initAudio(); setPaused(!paused);
-};
 document.getElementById('stop').onclick=function(e){ e.stopPropagation(); endSession(false); };
 elSess.addEventListener('click', function(){
   elChrome.classList.add('show');
