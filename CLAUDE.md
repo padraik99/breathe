@@ -81,6 +81,12 @@ a session never stops mid-out-breath. Dive tables ignore it — they set their o
   was four times gravity, so the tentacles blew sideways like a gale. Gravity
   dominates; the current is a sway. And the flow must vary *along* the rope, not
   only over time — a single lateral force just produces a straight rope leaning.
+- **Silence that wasn't silent.** The unlock clip was filled with `0x00`, which
+  in unsigned 8-bit PCM is full-scale negative, not silence — a DC offset looping
+  every 0.15s. Inaudible on desktop only because `volume` was set to 0.001; iOS
+  ignores that, so it clicked on every loop boundary on the phone and nowhere
+  else. Anything that only misbehaves on the phone is worth suspecting the media
+  element for.
 - **`offsetTop` measured against the wrong ancestor.** `.list` is not positioned,
   so its children's `offsetTop` included the header height and the list scrolled
   past the selected pattern. Measure with `getBoundingClientRect()` against the
@@ -94,6 +100,9 @@ a session never stops mid-out-breath. Dive tables ignore it — they set their o
 - **The one-second silent WAV.** iOS mutes Web Audio when the ringer switch is
   off, which would silence a bedtime app. Playing a silent `<audio>` element
   flips the session to `playback`. Removing it breaks sound for half the users.
+  It must be **genuinely** silent: 8-bit WAV data is *unsigned*, so silence is
+  `0x80`, not `0x00`. And do not rely on `element.volume` to hide a mistake —
+  iOS ignores programmatic volume on media elements entirely.
 - **Evidence notes that undercut their own pattern.** Box breathing's note says
   it moves HRV less than resonance; the O₂ table's says tables are not more
   intense than plain maximal holds. That honesty is the point of the app, not an

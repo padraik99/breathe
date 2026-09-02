@@ -2,6 +2,22 @@
 
 Newest first. Dates are when the change landed in the repo.
 
+## 2026-09-02 — The clicking
+
+**Fixed: the audio-unlock clip was not silent.** 8-bit WAV samples are unsigned,
+so silence is `0x80`; the clip was filled with `0x00`, which is full-scale
+negative — a DC offset looping every 0.15 seconds. On desktop `volume = 0.001`
+hid it. iOS ignores programmatic volume on media elements, so on an iPhone it
+played at output level and clicked at every loop boundary. Now genuinely silent
+and one second long.
+
+**Fixed: a small pop when a session ended.** `stopDrone()` faded with
+`setTargetAtTime`, which only ever approaches zero, then stopped the oscillators
+on its tail — a step, and a step is a click. It now ramps to a true zero first.
+
+If anyone misses the pulse: Settings → Metronome is a deliberate one-per-second
+soft pluck, off by default.
+
 ## 2026-08-30 — Three rings, three jobs
 
 Refinement of the dial after first use.
