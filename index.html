@@ -1486,12 +1486,25 @@ function closeSheets(){
   [elWhy,elSet,elDone].forEach(function(s){ s.classList.remove('on'); });
 }
 elSheetScrim.onclick = closeSheets;
+/* Swipe-down dismisses a sheet — but scrolling back UP through a long sheet is
+   also a downward finger drag, which used to close Settings mid-read. A drag is
+   a dismiss only when the content was already at its top and did not scroll. */
 [elWhy,elSet,elDone].forEach(function(s){
-  var y0=null;
-  s.addEventListener('touchstart',function(e){ y0=e.touches[0].clientY; },{passive:true});
+  var y0=null, x0=0, sb=null, top0=0;
+  s.addEventListener('touchstart',function(e){
+    var t=e.touches[0];
+    y0=t.clientY; x0=t.clientX;
+    sb = (e.target && e.target.closest) ? e.target.closest('.sbody') : null;
+    top0 = sb ? sb.scrollTop : 0;
+    if(sb && top0 > 1) y0 = null;      /* began inside scrolled content: a scroll */
+  },{passive:true});
   s.addEventListener('touchend',function(e){
-    if(y0!==null && e.changedTouches[0].clientY - y0 > 70) closeSheets();
-    y0=null;
+    if(y0===null){ sb=null; return; }
+    var t=e.changedTouches[0];
+    var dy = t.clientY - y0, dx = Math.abs(t.clientX - x0);
+    var moved = sb ? Math.abs(sb.scrollTop - top0) : 0;
+    if(dy > 70 && dy > dx*1.6 && moved < 4 && (!sb || sb.scrollTop <= 1)) closeSheets();
+    y0=null; sb=null;
   },{passive:true});
 });
 
@@ -1991,7 +2004,9 @@ function renderSettings(){
     '<div class="note">Add to Home Screen from Safari&rsquo;s share menu to run full screen '+
       'and offline. Keep the app open during a session — iOS stops web audio when you switch '+
       'away. This is a calming practice, not medical treatment. If you feel dizzy, stop and '+
-      'breathe normally.</div><div style="height:14px"></div>';
+      'breathe normally.</div>'+
+    '<div class="note" id="buildLine">build 2026-09-04.1824 · <span id="stoRep">storage …</span></div>'+
+    '<div style="height:14px"></div>';
 
   document.getElementById('gVis').innerHTML =
     grid(VIS_META, function(o){return store.vis===o.id;});
@@ -1999,6 +2014,26 @@ function renderSettings(){
     grid(TIMBRES, function(o){return store.timbre===o.id;}, null, true);
   document.getElementById('gBed').innerHTML =
     grid(BEDS, function(o){return store.bed===o.id;});
+
+  /* Is this phone actually keeping anything? Written so a stale build, a wiped
+     store and a working one look different at a glance, on the phone itself. */
+  (function(){
+    var el=document.getElementById('stoRep'); if(!el) return;
+    var raw=null, ok=false;
+    try{ localStorage.setItem('breathe.probe','1');
+         ok = localStorage.getItem('breathe.probe')==='1';
+         localStorage.removeItem('breathe.probe');
+         raw = localStorage.getItem(LS); }catch(e){ ok=false; }
+    var bits = [ ok ? 'storage ok' : 'STORAGE BLOCKED',
+                 raw ? (raw.length+' bytes saved') : 'NOTHING SAVED',
+                 store.resume ? 'resume on' : 'resume off' ];
+    el.textContent = bits.join(' · ');
+    if(navigator.storage && navigator.storage.persisted){
+      navigator.storage.persisted().then(function(p){
+        el.textContent = bits.join(' · ') + (p ? ' · persistent' : ' · evictable');
+      }).catch(function(){});
+    }
+  })();
 
   document.getElementById('gVis').onclick=function(e){
     var o=e.target.closest('.opt'); if(!o) return;

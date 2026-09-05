@@ -2,6 +2,20 @@
 
 Newest first. Dates are when the change landed in the repo.
 
+## 2026-09-04 — Settings stays open, and the app says which build it is
+
+- **Fixed: Settings dismissed itself when you scrolled back up.** The
+  swipe-to-close listener sat on the whole sheet and fired on any 70px of
+  downward travel — and scrolling *up* through a long sheet is a downward finger
+  drag. It now only reads as a dismiss when the content was already at its top,
+  did not scroll during the gesture, and the drag was mostly vertical.
+- **A build stamp and a storage report** at the foot of Settings: the build
+  date-time, whether localStorage accepts a write, how many bytes are actually
+  stored, whether resume is on, and whether the browser granted persistent
+  storage or is treating it as evictable. There is no service worker, so a
+  Home Screen shortcut can serve a stale copy of the app indefinitely — this
+  makes "am I running the old one?" answerable on the phone instead of by guess.
+
 ## 2026-09-02 — Pause, an elapsed ring, and three sounds measured
 
 From a session on the phone. The three audio changes were rendered offline
