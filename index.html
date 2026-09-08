@@ -538,6 +538,49 @@ function makeNoise(ctx){
   return buf;
 }
 
+/* Rain that is only filtered noise is not rain, it is wind — there is no
+   impact in it, and an ear listening for rain is listening for impacts. These
+   buffers carry actual drops: each one a short exponential ring that rises
+   slightly in pitch (the bubble that forms under the splash) with a broadband
+   tick on the front. Size is cubed-uniform, so most drops are small and fat
+   ones are occasional, which is what gives rain its uneven texture.
+
+   Three buffers of awkward lengths loop together. Their combined period is
+   long enough that it never audibly repeats, and nothing has to be scheduled
+   — no timers to drift or be throttled when the screen dims. */
+function makeDrops(ctx, secs, perSec){
+  var sr=ctx.sampleRate, len=Math.floor(sr*secs);
+  var buf=ctx.createBuffer(1,len,sr), d=buf.getChannelData(0);
+  var n=Math.round(secs*perSec), k, i, at, u, sz, f0, f1, dec, amp, L, t, e, f, v, pk=0;
+  for(k=0;k<n;k++){
+    at = Math.floor(Math.random()*len);
+    u  = Math.random(); sz = u*u*u;          /* mostly small, a few fat ones */
+    f0  = 2800 - sz*1900;                    /* small drops ring higher */
+    f1  = f0*(1.16 + sz*0.26);               /* and rise as the bubble forms */
+    dec = 0.005 + sz*0.040;
+    amp = 0.10 + sz*0.90;
+    L   = Math.floor(dec*4.5*sr);
+    for(i=0;i<L;i++){
+      t = i/sr; e = Math.exp(-t/dec);
+      f = f0 + (f1-f0)*(1 - Math.exp(-t/(dec*0.75)));
+      v = Math.sin(6.283185*f*t)*e*amp;
+      if(t < 0.0016) v += (Math.random()*2-1)*amp*0.65*(1 - t/0.0016);
+      /* wrap, so the loop point is not a seam */
+      d[(at+i) % len] += v;
+    }
+  }
+  for(i=0;i<len;i++){ v=Math.abs(d[i]); if(v>pk) pk=v; }
+  if(pk>0.95){ e=0.95/pk; for(i=0;i<len;i++) d[i]*=e; }
+  return buf;
+}
+var dropBufs=null;
+function getDrops(){
+  if(!dropBufs) dropBufs=[ makeDrops(A, 7.31, 15),
+                           makeDrops(A,11.13, 12),
+                           makeDrops(A,17.51,  8) ];
+  return dropBufs;
+}
+
 function initAudio(){
   if(A) { if(A.state==='suspended') A.resume(); return; }
   var C = window.AudioContext||window.webkitAudioContext;
@@ -754,21 +797,34 @@ function cueNoise(rate){
   if(rate) s.playbackRate.value=rate;
   return s;
 }
-/* two drops, a beat apart — an event without a note */
+/* Two or three drops — an event without a note.
+
+   The first version fired two drops at fixed offsets, fixed pitches and fixed
+   levels, so every cue in a session was byte-for-byte the same sound. Real
+   drops differ in size, and size is what you hear: a big one rings lower and
+   longer than a small one. Everything here is drawn fresh each time. */
 function cueDrops(amp){
-  var t=A.currentTime, offs=[0, 0.085], i;
-  for(i=0;i<offs.length;i++){
-    var src=cueNoise(1.4);
-    var bp=A.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=7;
-    bp.frequency.setValueAtTime(2600 - i*700, t+offs[i]);
-    bp.frequency.exponentialRampToValueAtTime(1400 - i*400, t+offs[i]+0.05);
-    var g=A.createGain(), pk=amp*(i?0.55:1.0)*1.4;
-    g.gain.setValueAtTime(0.0001, t+offs[i]);
-    g.gain.exponentialRampToValueAtTime(Math.max(0.0002,pk), t+offs[i]+0.002);
-    g.gain.exponentialRampToValueAtTime(0.0001, t+offs[i]+0.057);
+  var t=A.currentTime;
+  var n = Math.random()<0.35 ? 3 : 2;
+  var at = 0, i, sz, f0, f1, dec, lvl;
+  for(i=0;i<n;i++){
+    sz  = Math.random();                       /* 0 small .. 1 large */
+    f0  = 3400 - sz*1700;
+    f1  = f0*(0.52 + sz*0.10);                 /* the fall as it dies away */
+    dec = 0.038 + sz*0.036;
+    lvl = amp*1.4*(0.45 + sz*0.55)*(i===0 ? 1 : 0.62 + Math.random()*0.30);
+    var src=cueNoise(1.2 + Math.random()*0.5);
+    var bp=A.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=6 + sz*4;
+    bp.frequency.setValueAtTime(f0, t+at);
+    bp.frequency.exponentialRampToValueAtTime(f1, t+at+dec*0.9);
+    var g=A.createGain();
+    g.gain.setValueAtTime(0.0001, t+at);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002,lvl), t+at+0.002);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+at+dec);
     src.connect(bp); bp.connect(g); g.connect(master);
     var v=A.createGain(); v.gain.value=0.30; g.connect(v); v.connect(A.verbIn);
-    src.start(t+offs[i]); src.stop(t+offs[i]+0.12);
+    src.start(t+at); src.stop(t+at+dec+0.06);
+    at += 0.055 + Math.random()*0.075;         /* uneven spacing, not a rhythm */
   }
 }
 /* seeds in a gourd: a burst of grains, bright, gone in a blink */
@@ -814,15 +870,26 @@ function startDrone(){
   drone = [];
 
   if(store.bed==='rain'){
-    /* soft rain on a roof: two bands of noise, slowly breathing */
-    droneFilt.frequency.value = 1100; droneFilt.Q.value=.5;
-    var src=A.createBufferSource(); src.buffer=noiseBuf; src.loop=true;
-    src.connect(droneFilt); src.start(); drone.push(src);
-    var hs=A.createBiquadFilter(); hs.type='highpass'; hs.frequency.value=2600;
-    var hg=A.createGain(); hg.gain.value=.35;
-    var s2=A.createBufferSource(); s2.buffer=noiseBuf; s2.loop=true; s2.playbackRate.value=1.7;
-    s2.connect(hs); hs.connect(hg); hg.connect(droneFilt);
-    s2.start(); drone.push(s2);
+    /* Rain is a wash plus impacts. The wash is the mass of it falling further
+       off; the drops are the ones landing near you. Without the second half it
+       is just wind. */
+    droneFilt.frequency.value = 3400; droneFilt.Q.value=.4;
+    var wash=A.createBufferSource(); wash.buffer=noiseBuf; wash.loop=true;
+    var wf=A.createBiquadFilter(); wf.type='bandpass';
+    wf.frequency.value=1250; wf.Q.value=0.55;
+    var wg=A.createGain(); wg.gain.value=.17;
+    wash.connect(wf); wf.connect(wg); wg.connect(droneFilt);
+    wash.start(); drone.push(wash);
+
+    var dr=getDrops(), di, ds, dg;
+    for(di=0; di<dr.length; di++){
+      ds=A.createBufferSource(); ds.buffer=dr[di]; ds.loop=true;
+      /* a few cents of rate offset per layer so they never lock together */
+      ds.playbackRate.value = 0.94 + di*0.06;
+      dg=A.createGain(); dg.gain.value = 1.00 - di*0.17;
+      ds.connect(dg); dg.connect(droneFilt);
+      ds.start(); drone.push(ds);
+    }
     droneGain.gain.setTargetAtTime(.115, A.currentTime, 2.4);
     return;
   }
@@ -889,8 +956,10 @@ function stopDrone(){
 function droneBreath(v){
   if(!drone||!droneFilt) return;
   if(store.bed==='rain'){
-    droneFilt.frequency.setTargetAtTime(950 + v*700, A.currentTime, .30);
-    droneGain.gain.setTargetAtTime(.095 + v*.055, A.currentTime, .35);
+    /* Deliberately NOT modulated. A moving lowpass and a moving gain over
+       noise is the definition of a gust — it was the breath modulation, not
+       the noise, that made this sound like wind. Rain falls at one rate. */
+    return;
   } else if(store.bed==='shruti'){
     droneFilt.frequency.setTargetAtTime(760 + v*620, A.currentTime, .30);
     droneGain.gain.setTargetAtTime(.130 + v*.065, A.currentTime, .35);
@@ -1377,8 +1446,35 @@ var CUES_META = [
   {id:'bell',   n:'Bell',   d:'the pitched one'},
   {id:'off',    n:'Off',    d:'the ring alone'}
 ];
-function CUELVL_NAME(){
-  return store.pcueLvl===1 ? 'Soft' : store.pcueLvl===8 ? 'Clear' : 'Medium';
+var CUELVLS = [
+  {db:-2, n:'Soft',   q:'2 dB under the background', d:'you half-notice it'},
+  {db: 4, n:'Medium', q:'4 dB over the background',  d:'clearly there, not startling'},
+  {db:10, n:'Clear',  q:'10 dB over the background', d:'unmistakable, for a noisy room'}
+];
+function cuelvl(){
+  for(var i=0;i<CUELVLS.length;i++) if(CUELVLS[i].db===store.pcueLvl) return CUELVLS[i];
+  return CUELVLS[1];
+}
+
+/* Auditioning the cue in Settings used to fire it with no bed playing, which
+   meant it always fell back to the fixed floor used for a silent background.
+   All three levels sounded near enough identical, because the thing they
+   change — the margin over the bed — was not in the room. The preview now
+   brings the real background up first. */
+var previewing = false;
+function previewCue(){
+  if((store.pcue||'drops')==='off' || previewing) return;
+  initAudio(); if(!A) return;
+  previewing = true;
+  var hadBed = !!drone, needBed = (store.bed !== 'off');
+  if(needBed && !hadBed) startDrone();
+  var lead = (needBed && !hadBed) ? 1800 : 120;   /* the bed rises over ~2.4s */
+  setTimeout(function(){ preCue('in'); }, lead);
+  setTimeout(function(){ preCue('out'); }, lead + 1500);
+  setTimeout(function(){
+    if(needBed && !hadBed) stopDrone();
+    previewing = false;
+  }, lead + 2600);
 }
 
 /* ============================ THE PRE-CUE ============================
@@ -2084,8 +2180,16 @@ function renderSettings(){
     '<h4>Volume</h4><input type="range" id="vol" min="0" max="100" value="'+
       Math.round(store.vol*100)+'">'+
     '<h4>Transition cue</h4><div id="gCue"></div>'+
-    '<div class="opts" style="margin-top:9px"><div class="opt wide" id="oCueLvl">Cue level'+
-      '<small>'+CUELVL_NAME()+' &middot; set against the background, not fixed</small></div></div>'+
+    '<div class="opts" style="margin-top:9px"><div class="opt wide" id="oCueLvl">'+
+      'Cue level &middot; '+cuelvl().n+
+      '<small><b>'+cuelvl().q+'</b> &mdash; '+cuelvl().d+
+      '. Tap to change.</small></div></div>'+
+    '<div class="note">The cue is not set to a fixed volume. The app measures how '+
+      'loud your background actually is and puts the cue that many decibels above '+
+      'it, so one setting sounds the same under Shruti, the Thrum, Rain or nothing. '+
+      'With Background set to None there is nothing to measure, so the cue uses a '+
+      'quiet fixed level instead. Tap either row to hear it with your background '+
+      'playing.</div>'+
     '<h4>On opening</h4>'+
     '<div class="opts"><div class="opt wide" id="oResume">'+
       (store.resume?'Pick up where you left off':'Always start on Sleep')+
@@ -2104,7 +2208,7 @@ function renderSettings(){
       'and offline. Keep the app open during a session — iOS stops web audio when you switch '+
       'away. This is a calming practice, not medical treatment. If you feel dizzy, stop and '+
       'breathe normally.</div>'+
-    '<div class="note" id="buildLine">build 2026-09-08.0508 · <span id="stoRep">storage …</span></div>'+
+    '<div class="note" id="buildLine">build 2026-09-08.0632 · <span id="stoRep">storage …</span></div>'+
     '<div style="height:14px"></div>';
 
   document.getElementById('gVis').innerHTML =
@@ -2149,12 +2253,12 @@ function renderSettings(){
   document.getElementById('gCue').onclick=function(e){
     var o=e.target.closest('.opt'); if(!o) return;
     store.pcue=o.dataset.k; save(); renderSettings();
-    if(store.pcue!=='off'){ initAudio(); preCue('in'); }
+    previewCue();
   };
   document.getElementById('oCueLvl').onclick=function(){
-    var L=[1,4,8], i=L.indexOf(store.pcueLvl);
-    store.pcueLvl = L[(i+1)%L.length]; save(); renderSettings();
-    if((store.pcue||'drops')!=='off'){ initAudio(); preCue('in'); }
+    var i=CUELVLS.indexOf(cuelvl());
+    store.pcueLvl = CUELVLS[(i+1)%CUELVLS.length].db; save(); renderSettings();
+    previewCue();
   };
   document.getElementById('gBed').onclick=function(e){
     var o=e.target.closest('.opt'); if(!o) return;

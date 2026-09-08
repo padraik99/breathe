@@ -2,6 +2,69 @@
 
 Newest first. Dates are when the change landed in the repo.
 
+## 2026-09-09 — Rain that has rain in it
+
+The rain background sounded like wind because it was wind. It was two bands of
+filtered noise and nothing else — no impacts at all — with the breath sweeping
+its lowpass from 950 to 1650 Hz and its gain up 4 dB and back down. A moving
+filter and a moving level over noise is the textbook recipe for a gust. Three
+faults, all now fixed.
+
+- **There are drops in it now.** Each is a short exponential ring that rises
+  slightly in pitch as the bubble forms under the splash, with a broadband tick
+  on the front. Size is cubed-uniform, so most drops are small and the fat ones
+  are occasional — which is what makes rain uneven rather than mechanical.
+  About 35 a second across three layers.
+- **The wash was drowning them.** Measured, the impacts sat 7.5 dB below the
+  noise bed in RMS, so the ear got a wash with some texture in it rather than
+  rain. The wash is down to a fifth of its old level; it is the mass of rain
+  falling further off, not the whole sound.
+- **It no longer breathes.** `droneBreath()` now returns immediately for rain.
+  Rain falls at one rate.
+
+Measured over ten seconds:
+
+```
+                  impacts/sec   drop size spread   level drift
+  old rain bed        0.0            0.0 dB          4.3 dB
+  new rain bed       10.5            5.3 dB          3.3 dB
+```
+
+The remaining 3.3 dB is the randomness of a shower, not a cycle — the old bed's
+4.3 dB was locked to the breath. Three loops of awkward length (7.31, 11.13 and
+17.51 seconds) at slightly different playback rates mean it never audibly
+repeats, and nothing is scheduled, so there are no timers to drift or be
+throttled when the screen dims.
+
+**The cue drops were identical every time.** Two drops, fixed offsets, fixed
+pitches, fixed levels — only the noise seed changed. Count (two or three),
+size, pitch, decay, level and spacing are all drawn fresh now, and size drives
+the rest, so a big drop rings lower and longer than a small one. Duration
+across twelve firings spread 190 ms, against 11 ms before.
+
+## 2026-09-08 — Cue level says what it does, and the preview stops lying
+
+Two reasons the three cue levels sounded identical.
+
+- **The preview was auditioning them against silence.** The background only
+  runs during a session, so tapping a cue in Settings fired it with no bed
+  playing — which meant it fell back to the fixed floor used when there is
+  nothing to measure. The one thing the setting changes, its margin over the
+  background, was not in the room. Tapping either cue row now brings the real
+  background up first, plays the cue twice, and fades the background out again.
+- **The steps were too small to hear.** They were +1 / +4 / +8 dB: 3 and 4 dB
+  apart, 7 dB end to end. Three decibels is about the threshold of noticing on
+  a short transient. Now **−2 / +4 / +10** — 6 dB steps, which is a doubling of
+  amplitude each time, and 12 dB end to end.
+
+The row also states the actual figure rather than a mood word: *"4 dB over the
+background — clearly there, not startling."* Underneath it, a note explains
+that the cue is not set to a fixed volume at all: the app measures how loud
+your background really is and places the cue that many decibels above it, so
+one setting sounds the same under Shruti, the Thrum, Rain or nothing — and
+that with Background set to None there is nothing to measure, so a quiet fixed
+level is used instead.
+
 ## 2026-09-08 — Nothing was ever being saved
 
 **Fixed: every setting, and the whole practice log, had been writing to the

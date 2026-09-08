@@ -143,6 +143,14 @@ others. Two lessons already paid for:
   of gain would have separated them. Check for collisions with the bed's
   partials before reaching for the volume.
 
+**Noise alone is weather, not rain.** The rain bed was filtered noise with the
+breath sweeping its filter and gain — which is exactly how you synthesize a
+gust. An ear listening for rain is listening for *impacts*; without them there
+is nothing to identify. The bed now carries about 35 discrete drops a second in
+three looping buffers of awkward length, with the wash dropped to a fifth of
+its old level so the impacts are not buried, and `droneBreath()` leaves rain
+alone. Do not re-add breath modulation to it.
+
 Cues that must be heard over the bed get `duckBed()`. The metronome deliberately
 does not — ducking once a second would make the bed pump.
 
