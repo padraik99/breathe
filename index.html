@@ -452,6 +452,7 @@ function defaults(){
   return {totalSec:0, days:{}, streak:0, last:'', ms:[],
           vis:'jelly', timbre:'bowls', bed:'drone', metro:false, vol:.7,
           cat:'sleep', pat:'longexhale', resume:true,
+          pcue:'drops', pcueLvl:4,
           mins:{sleep:12, stress:5, focus:3, all:5}};
 }
 function load(){
@@ -510,6 +511,7 @@ function importCode(code){
 }
 
 /* ============================ AUDIO ============================ */
+var bedAna=null, bedBuf=null;
 var A = null, master=null, verb=null, drone=null, droneGain=null, droneFilt=null,
     silentEl=null, noiseBuf=null;
 
@@ -724,6 +726,70 @@ function tick(){
 
 /* Dip the bed for a moment so a cue can be heard through it without having to
    be loud. Costs nothing and works under every background. */
+/* ===================== THE TRANSITION CUE =====================
+   Every earlier version was pitched, and a pitched cue has to solve two
+   problems at once: find a hole in the bed's harmony AND find one level
+   that works over a dense background and over silence. Those fight. The
+   293.66 Hz bell was literally the same note as the shruti's third
+   harmonic, so no gain would ever have separated them.
+
+   These are noise. They have no fundamental, so they cannot be masked
+   harmonically — leaving only the level problem, and that one is solved
+   by measuring the bed rather than guessing at it.
+   ============================================================== */
+var CUE_FLOOR = 0.010;          /* with no bed, sit here rather than divide by zero */
+function bedLevel(){
+  if(!bedAna) return 0;
+  bedAna.getFloatTimeDomainData(bedBuf);
+  var s=0, i;
+  for(i=0;i<bedBuf.length;i++) s += bedBuf[i]*bedBuf[i];
+  return Math.sqrt(s/bedBuf.length);
+}
+function cueAmp(){
+  var db = (typeof store.pcueLvl === 'number') ? store.pcueLvl : 4;
+  return Math.min(0.60, Math.max(bedLevel(), CUE_FLOOR) * Math.pow(10, db/20));
+}
+function cueNoise(rate){
+  var s=A.createBufferSource(); s.buffer=noiseBuf; s.loop=true;
+  if(rate) s.playbackRate.value=rate;
+  return s;
+}
+/* two drops, a beat apart — an event without a note */
+function cueDrops(amp){
+  var t=A.currentTime, offs=[0, 0.085], i;
+  for(i=0;i<offs.length;i++){
+    var src=cueNoise(1.4);
+    var bp=A.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=7;
+    bp.frequency.setValueAtTime(2600 - i*700, t+offs[i]);
+    bp.frequency.exponentialRampToValueAtTime(1400 - i*400, t+offs[i]+0.05);
+    var g=A.createGain(), pk=amp*(i?0.55:1.0)*1.4;
+    g.gain.setValueAtTime(0.0001, t+offs[i]);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002,pk), t+offs[i]+0.002);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+offs[i]+0.057);
+    src.connect(bp); bp.connect(g); g.connect(master);
+    var v=A.createGain(); v.gain.value=0.30; g.connect(v); v.connect(A.verbIn);
+    src.start(t+offs[i]); src.stop(t+offs[i]+0.12);
+  }
+}
+/* seeds in a gourd: a burst of grains, bright, gone in a blink */
+function cueShaker(amp){
+  var t=A.currentTime, n=13, i;
+  var bp=A.createBiquadFilter(); bp.type='bandpass';
+  bp.frequency.value=4200; bp.Q.value=1.1;
+  var out=A.createGain(); out.gain.value=amp*1.5;
+  bp.connect(out); out.connect(master);
+  var v=A.createGain(); v.gain.value=0.16; out.connect(v); v.connect(A.verbIn);
+  for(i=0;i<n;i++){
+    var d=i*(0.0042+Math.random()*0.0045);
+    var src=cueNoise(0.9+Math.random()*0.5);
+    var g=A.createGain(), pk=(1-i/n)*(0.55+Math.random()*0.45);
+    g.gain.setValueAtTime(0.0001, t+d);
+    g.gain.exponentialRampToValueAtTime(pk, t+d+0.0012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+d+0.020);
+    src.connect(g); g.connect(bp); src.start(t+d); src.stop(t+d+0.05);
+  }
+}
+
 function duckBed(amount, hold){
   if(!drone || !droneGain) return;
   var t=A.currentTime, cur=droneGain.gain.value;
@@ -738,6 +804,12 @@ function startDrone(){
   droneFilt = A.createBiquadFilter(); droneFilt.type='lowpass';
   droneGain = A.createGain(); droneGain.gain.value = 0;
   droneFilt.connect(droneGain); droneGain.connect(master);
+  /* a tap on the bed, so the cue can be placed above whatever is really
+     playing instead of at a fixed amplitude that only suits one background */
+  bedAna = A.createAnalyser(); bedAna.fftSize = 4096;
+  bedAna.smoothingTimeConstant = 0.4;
+  droneGain.connect(bedAna);
+  bedBuf = new Float32Array(bedAna.fftSize);
   var dg2 = A.createGain(); dg2.gain.value=.45; droneGain.connect(dg2); dg2.connect(A.verbIn);
   drone = [];
 
@@ -811,7 +883,7 @@ function stopDrone(){
   droneGain.gain.cancelScheduledValues(t);
   droneGain.gain.setValueAtTime(droneGain.gain.value, t);
   droneGain.gain.linearRampToValueAtTime(0, t + 1.6);
-  var d=drone; drone=null;
+  var d=drone; drone=null; bedAna=null;
   setTimeout(function(){ d.forEach(function(o){ try{o.stop();}catch(e){} }); }, 1900);
 }
 function droneBreath(v){
@@ -911,7 +983,9 @@ function n1(x){ var i=Math.floor(x), f=x-i, a=NS[((i%512)+512)%512], b=NS[(((i+1
 var VIS = {};
 
 /* layout: lerps between "resting behind the menu" and "centre stage" */
-var LY=0.72, LS=0.52, LA=0.55;   // centre-y fraction, scale, alpha
+var LY=0.72, LSC=0.52, LA=0.55;   // centre-y fraction, scale, alpha
+/* LSC, not LS: LS is the localStorage key in _state.js and these files are
+   concatenated into one scope, so the short name silently clobbered it. */
 
 
 function soft(x,y,rx,ry,c,al,mid){
@@ -940,7 +1014,7 @@ function disc(x,y,rx,ry,c,al){
 /* -- 3. living ink -- */
 
 VIS.ink = function(t,v){
-  var cx=W/2, cy=H*LY, base=Math.min(W,H)*0.20*LS;
+  var cx=W/2, cy=H*LY, base=Math.min(W,H)*0.20*LSC;
   g.globalCompositeOperation='lighter';
   /* a shifting cluster of soft lobes — reads as ink blooming, never as a polygon */
   var R = base*(0.60 + v*0.95);
@@ -979,7 +1053,7 @@ VIS.ink = function(t,v){
 /* -- 4. bloom -- */
 
 VIS.bloom = function(t,v){
-  var cx=W/2, cy=H*LY, base=Math.min(W,H)*0.20*LS;
+  var cx=W/2, cy=H*LY, base=Math.min(W,H)*0.20*LSC;
   g.globalCompositeOperation='lighter';
   var RINGS=[{n:7,sp:0.030,ph:0,   len:1.45,wid:0.30,col:[255,214,168],al:1.00},
              {n:5,sp:-0.021,ph:0.62,len:1.02,wid:0.26,col:[255,178,190],al:0.72},
@@ -1115,7 +1189,7 @@ VIS.jelly = function(t,v){
   var vel = Math.max(-1.6, Math.min(1.6, JF.vel));
   if(!JF.tent.length) ropeInit();
 
-  var base = Math.min(W,H)*0.20*LS;
+  var base = Math.min(W,H)*0.20*LSC;
   var cx = W/2 + Math.sin(t*0.113)*Math.min(W,H)*0.06 + Math.sin(t*0.31)*7;
   var R = base*(0.74 + JF.v*0.58);
   /* contracting drives it forward and lets it glide back on the refill —
@@ -1273,7 +1347,7 @@ VIS.aurora = function(t,v){
     if(A2.next<=0){ A2.flare=1; A2.next=6+Math.random()*22; }
     A2.flare *= 0.994;
     var floorY=H*A2.y;
-    var hMax=reach*A2.h*(0.30+v*0.52)*(0.55+LS*0.55)*(1+A2.flare*0.85);
+    var hMax=reach*A2.h*(0.30+v*0.52)*(0.55+LSC*0.55)*(1+A2.flare*0.85);
     var drift=Math.sin(t*A2.spd + A2.ph)*0.10;
     for(var i2=0;i2<NC;i2++){
       var u=(i2+0.5)/NC;
@@ -1297,28 +1371,49 @@ VIS.aurora = function(t,v){
   g.globalCompositeOperation='source-over';
 };
 
+var CUES_META = [
+  {id:'drops',  n:'Drops',  d:'two, a beat apart'},
+  {id:'shaker', n:'Shaker', d:'seeds in a gourd'},
+  {id:'bell',   n:'Bell',   d:'the pitched one'},
+  {id:'off',    n:'Off',    d:'the ring alone'}
+];
+function CUELVL_NAME(){
+  return store.pcueLvl===1 ? 'Soft' : store.pcueLvl===8 ? 'Clear' : 'Medium';
+}
+
 /* ============================ THE PRE-CUE ============================
    One second before the change, a hint of what is coming.
 
-   The first version was the same note an octave up at a fraction of the main
-   cue's gain. An octave is the same pitch class, so under a harmonically dense
-   bed like the shruti it sat inside the drone's own overtones and disappeared —
-   and because its level was a fraction of each phase's amplitude it was louder
-   before an inhale than before an exhale. This one is a minor third above the
-   octave (a different pitch class, still in D minor), always the same absolute
-   level whichever direction it announces, and it ducks the bed briefly rather
-   than shouting over it. */
-var THIRD = Math.pow(2, 3/12);
+   Three pitched versions failed here before this one. An octave up sat
+   inside the shruti's own overtones and vanished. A minor third above the
+   octave escaped the harmony but, at a fixed level, was inaudible under a
+   dense bed and obtrusive over a thin one. The lesson is that a pitched
+   cue must satisfy two constraints at once — a hole in the harmony and a
+   level that suits every background — and those pull against each other.
+
+   Noise has no fundamental, so it cannot be masked harmonically. That
+   leaves only the level, and the level is measured off the bed instead of
+   being guessed at. See bedLevel() and cueAmp() in the audio section.
+   ==================================================================== */
+/* The pre-cue: a texture, not a note, placed relative to the bed.
+   Off is a real choice — the closing ring still carries the change. */
 function preCue(type){
-  if(!A || store.timbre==='none') return;
-  var c = CUE[type]; if(!c) return;
-  duckBed(0.34, 0.55);
-  var f = c[0] * 2 * THIRD;
-  if(store.timbre==='breath'){ swell(f*0.5, 0.085, 0.55, 1); return; }
-  /* always the bright voice, so audibility does not change with the setting */
-  var keep = store.timbre; store.timbre = 'glass';
-  bowl(f, 0.150, 1.25, 0.05);
-  store.timbre = keep;
+  if(!A) return;
+  var kind = store.pcue || 'drops';
+  if(kind === 'off') return;
+  if(kind === 'bell'){
+    /* the old pitched cue, kept for anyone who prefers it */
+    if(!CUE[type]) return;
+    duckBed(0.34, 0.55);
+    var keep = store.timbre; store.timbre = 'glass';
+    bowl(CUE[type][0] * 2 * Math.pow(2,3/12), 0.150, 1.25, 0.05);
+    store.timbre = keep;
+    return;
+  }
+  /* noise cues do not need the bed out of the way — they are not competing
+     for the same part of the spectrum, and ducking twice a breath pumps */
+  var amp = cueAmp();
+  if(kind === 'shaker') cueShaker(amp); else cueDrops(amp);
 }
 
 /* ============================ ENGINE ============================ */
@@ -1410,7 +1505,7 @@ function frame(ts){
   var tgt = (running||starting) ? 1 : 0;
   uiT += (tgt-uiT) * Math.min(1, dt*1.6);
   LY = 0.42 + (0.46-0.42)*uiT;
-  LS = 0.50 + (1.00-0.50)*uiT;
+  LSC = 0.50 + (1.00-0.50)*uiT;
   LA = 0.66 + (1.00-0.66)*uiT;
 
   g.clearRect(0,0,W,H);
@@ -1432,7 +1527,8 @@ function frame(ts){
      with the elapsed ring further out */
   if(cueGlow > 0.01){
     var rr = Math.min(W,H)*(0.22 + (1-cueGlow)*0.09);
-    g.globalAlpha = LA * cueGlow * (store.timbre==='none' ? 0.22 : 0.06);
+    var ringOnly = (store.pcue==='off' || store.timbre==='none');
+    g.globalAlpha = LA * cueGlow * (ringOnly ? 0.26 : 0.06);
     g.beginPath(); g.arc(W/2, H*LY, rr, 0, 6.283);
     g.strokeStyle='rgba(255,246,235,.9)'; g.lineWidth=1.1; g.stroke();
   }
@@ -1987,6 +2083,9 @@ function renderSettings(){
       '<small>soft pulse each second · '+(store.metro?'on':'off')+'</small></div></div>'+
     '<h4>Volume</h4><input type="range" id="vol" min="0" max="100" value="'+
       Math.round(store.vol*100)+'">'+
+    '<h4>Transition cue</h4><div id="gCue"></div>'+
+    '<div class="opts" style="margin-top:9px"><div class="opt wide" id="oCueLvl">Cue level'+
+      '<small>'+CUELVL_NAME()+' &middot; set against the background, not fixed</small></div></div>'+
     '<h4>On opening</h4>'+
     '<div class="opts"><div class="opt wide" id="oResume">'+
       (store.resume?'Pick up where you left off':'Always start on Sleep')+
@@ -2005,7 +2104,7 @@ function renderSettings(){
       'and offline. Keep the app open during a session — iOS stops web audio when you switch '+
       'away. This is a calming practice, not medical treatment. If you feel dizzy, stop and '+
       'breathe normally.</div>'+
-    '<div class="note" id="buildLine">build 2026-09-04.1824 · <span id="stoRep">storage …</span></div>'+
+    '<div class="note" id="buildLine">build 2026-09-08.0508 · <span id="stoRep">storage …</span></div>'+
     '<div style="height:14px"></div>';
 
   document.getElementById('gVis').innerHTML =
@@ -2014,6 +2113,8 @@ function renderSettings(){
     grid(TIMBRES, function(o){return store.timbre===o.id;}, null, true);
   document.getElementById('gBed').innerHTML =
     grid(BEDS, function(o){return store.bed===o.id;});
+  document.getElementById('gCue').innerHTML =
+    grid(CUES_META, function(o){return (store.pcue||'drops')===o.id;});
 
   /* Is this phone actually keeping anything? Written so a stale build, a wiped
      store and a working one look different at a glance, on the phone itself. */
@@ -2044,6 +2145,16 @@ function renderSettings(){
     var o=e.target.closest('.opt'); if(!o) return;
     store.timbre=o.dataset.k; save(); renderSettings(); if(cat!=='all') paintWorld();
     if(store.timbre!=='none'){ initAudio(); cue('in',4); }
+  };
+  document.getElementById('gCue').onclick=function(e){
+    var o=e.target.closest('.opt'); if(!o) return;
+    store.pcue=o.dataset.k; save(); renderSettings();
+    if(store.pcue!=='off'){ initAudio(); preCue('in'); }
+  };
+  document.getElementById('oCueLvl').onclick=function(){
+    var L=[1,4,8], i=L.indexOf(store.pcueLvl);
+    store.pcueLvl = L[(i+1)%L.length]; save(); renderSettings();
+    if((store.pcue||'drops')!=='off'){ initAudio(); preCue('in'); }
   };
   document.getElementById('gBed').onclick=function(e){
     var o=e.target.closest('.opt'); if(!o) return;

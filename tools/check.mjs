@@ -65,4 +65,52 @@ try {
   fail('README pattern table is stale — run: node tools/sync-readme.mjs');
 }
 
-if (!process.exitCode) console.log('\nAll checks passed.');
+/* ------------------------------------------------------------------
+   Duplicate top-level names.
+
+   The source files are concatenated into ONE function scope at build
+   time, so a `var` at the top level of one file is in scope in all of
+   them. `LS` was the localStorage key in _state.js and, independently,
+   the layout scale in the visual files. On the first animation frame the
+   layout code overwrote the key with 0.5, so every save() after that
+   wrote to a key named "0.5" and load() read "breathe.v2", which no
+   longer existed. Nothing threw. Settings simply never persisted.
+
+   Short names in separate files are not separate. This checks.
+   ------------------------------------------------------------------ */
+const SRC = ['_patterns.js','_state.js','_audio.js','_glyph.js',
+             '_vis_keep.js','_vis_new.js','_ui.js'];
+const seen = new Map();
+const clashes = [];
+for(const f of SRC){
+  const full = join(ROOT, f);
+  let text; try{ text = readFileSync(full,'utf8'); }catch{ continue; }
+  const names = new Set();
+  /* Only real top-level declarations count. A name assigned from another file
+     is usually deliberate shared state; a name DECLARED twice is the hazard,
+     because the second `var` silently takes over the first one's value. */
+  for(const m of text.matchAll(/^(?:var|let|const)\s+([^;\n]*(?:\n\s{4,}[^;\n]*)*)/gm)){
+    let depth = 0, cur = '';
+    for(const ch of m[1] + ','){
+      if('([{'.includes(ch)) depth++;
+      else if(')]}'.includes(ch)) depth--;
+      if(ch === ',' && depth === 0){
+        const id = cur.trim().split('=')[0].trim();
+        if(/^[A-Za-z_$][\w$]*$/.test(id)) names.add(id);
+        cur = '';
+      } else cur += ch;
+    }
+  }
+  for(const m of text.matchAll(/^function\s+([A-Za-z_$][\w$]*)/gm)) names.add(m[1]);
+  for(const n of names){
+    if(seen.has(n) && seen.get(n) !== f) clashes.push(`${n}  (${seen.get(n)} and ${f})`);
+    else seen.set(n, f);
+  }
+}
+if(clashes.length){
+  fail('top-level names declared in more than one file — they share one scope:\n      ' +
+       clashes.join('\n      '));
+} else pass('no top-level name collisions between modules');
+
+if (!process.exitCode) 
+console.log('\nAll checks passed.');

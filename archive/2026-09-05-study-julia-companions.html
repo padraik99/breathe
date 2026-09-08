@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#050308">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Julia Companions</title>
+</head>
+<body>
+<style>
+  :root{
+    --bg0:#1c1333; --bg1:#050308;
+    --amber:#e0a86a; --plum:#a97fd6;
+    --tx:#f6efe7; --tx2:rgba(246,239,231,.62); --tx3:rgba(246,239,231,.34);
+    --edge:rgba(255,224,190,.16);
+    --safe-b:env(safe-area-inset-bottom,0px);
+    --safe-t:env(safe-area-inset-top,0px);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;margin:0;overflow:hidden;background:#050308}
+  body{
+    color:var(--tx);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    -webkit-user-select:none;user-select:none;touch-action:manipulation;
+    background:linear-gradient(172deg,var(--bg0) 0%,var(--bg1) 78%);
+  }
+  #c{position:fixed;inset:0;width:100%;height:100%;display:block}
+
+  /* ---- top: what you are looking at ---- */
+  #top{
+    position:fixed;left:0;right:0;top:0;z-index:5;pointer-events:none;
+    padding:calc(var(--safe-t) + 14px) 18px 0;
+    display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  }
+  #name{font-size:15px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
+  #blurb{font-size:12.5px;line-height:1.45;color:var(--tx2);margin-top:5px;max-width:23em}
+  #fps{
+    font-variant-numeric:tabular-nums;font-size:12px;color:var(--tx2);
+    text-align:right;white-space:nowrap;line-height:1.5;
+  }
+  #fps b{display:block;font-size:19px;color:var(--tx);font-weight:600}
+  #fps.warn b{color:#e8926f}
+
+  /* ---- the catalogue: where c is sitting right now ---- */
+  #mapWrap{
+    position:fixed;z-index:5;right:14px;pointer-events:none;
+    bottom:calc(var(--safe-b) + 150px);
+    text-align:center;
+  }
+  #map{display:block;border:1px solid var(--edge);border-radius:5px;background:#07040d}
+  #mapCap{font-size:9.5px;letter-spacing:.1em;color:var(--tx3);margin-top:5px;text-transform:uppercase}
+
+  #phase{
+    position:fixed;z-index:5;left:18px;pointer-events:none;
+    bottom:calc(var(--safe-b) + 152px);
+    font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--tx2);
+  }
+  #phase span{display:block;font-size:9.5px;letter-spacing:.1em;color:var(--tx3);margin-top:4px}
+
+  /* ---- bottom controls ---- */
+  #dock{
+    position:fixed;left:0;right:0;bottom:0;z-index:6;
+    padding:12px 12px calc(var(--safe-b) + 12px);
+    background:linear-gradient(180deg,rgba(5,3,8,0) 0%,rgba(5,3,8,.82) 34%,rgba(5,3,8,.95) 100%);
+  }
+  #tabs{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;padding-bottom:2px}
+  #tabs::-webkit-scrollbar{display:none}
+  .tab{
+    flex:0 0 auto;padding:9px 13px;border-radius:11px;font-size:12.5px;
+    border:1px solid var(--edge);color:var(--tx2);
+    background:rgba(255,240,220,.04);white-space:nowrap;cursor:pointer;
+    transition:color .2s,border-color .2s,background .2s;
+  }
+  .tab.on{color:#141013;background:var(--amber);border-color:var(--amber);font-weight:600}
+
+  #knobs{display:flex;align-items:center;gap:14px;margin-top:11px;padding:0 2px}
+  .knob{flex:1;min-width:0}
+  .knob label{
+    display:flex;justify-content:space-between;font-size:10.5px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--tx3);margin-bottom:5px;
+  }
+  .knob label b{color:var(--tx2);font-weight:600;font-variant-numeric:tabular-nums}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;margin:0;
+  }
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--edge);border-radius:2px}
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:17px;height:17px;border-radius:50%;
+    background:var(--amber);margin-top:-7.5px;border:none;
+  }
+  input[type=range]::-moz-range-track{height:2px;background:var(--edge);border-radius:2px}
+  input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:var(--amber);border:none}
+
+  #hint{
+    font-size:10.5px;color:var(--tx3);text-align:center;margin-top:9px;line-height:1.5;
+  }
+</style>
+
+<canvas id="c"></canvas>
+
+<div id="top">
+  <div>
+    <div id="name">Dissolve</div>
+    <div id="blurb"></div>
+  </div>
+  <div id="fps"><b>—</b>fps</div>
+</div>
+
+<div id="phase">Inhale<span id="cval">c = …</span></div>
+
+<div id="mapWrap">
+  <canvas id="map" width="104" height="86"></canvas>
+  <div id="mapCap">c on the map</div>
+</div>
+
+<div id="dock">
+  <div id="tabs"></div>
+  <div id="knobs">
+    <div class="knob">
+      <label>Resolution <b id="lRes">35%</b></label>
+      <input type="range" id="res" min="12" max="70" value="35">
+    </div>
+    <div class="knob">
+      <label>Detail <b id="lIt">72</b></label>
+      <input type="range" id="it" min="24" max="180" value="72">
+    </div>
+  </div>
+  <div id="hint">Watch one for a few breaths before judging it. Drop resolution if the fps sags.</div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* =====================================================================
+   A study, not a build. Five candidate companions, four of them Julia
+   sets and one branching form for contrast, all driven by the same
+   4-in / 6-out breath the app uses.
+
+   The Julia sets are rendered small and scaled up on purpose: the
+   softness that costs nothing is also the diffusion we are after.
+   ===================================================================== */
+
+var cv = document.getElementById('c'), g = cv.getContext('2d', {alpha:false});
+var W=0, H=0, DPR=1;
+
+/* the low-resolution buffer the fractal is actually computed into, and a
+   second one the same size where the bloom is assembled. Doing the halo at
+   137x295 and upscaling once costs a tenth of a millisecond; doing it at
+   full size three times cost 111 ms a frame, which is where the whole
+   budget was going before this was measured. */
+var off = document.createElement('canvas'), og = off.getContext('2d');
+var mid = document.createElement('canvas'), mg2 = mid.getContext('2d');
+var img = null, oW=0, oH=0;
+
+var elName=document.getElementById('name'), elBlurb=document.getElementById('blurb'),
+    elFps=document.getElementById('fps'), elPhase=document.getElementById('phase'),
+    elCval=document.getElementById('cval'), elRes=document.getElementById('res'),
+    elIt=document.getElementById('it'), elLRes=document.getElementById('lRes'),
+    elLIt=document.getElementById('lIt');
+
+var scale = 0.35, maxIter = 72;
+
+/* The fractal is deliberately soft, so a device-pixel-ratio-1 canvas looks
+   identical to a retina one and rasterises four times faster. Coral is drawn
+   with strokes and does want the extra pixels. */
+function resize(){
+  var want = (VARIANTS[vi] && VARIANTS[vi].custom)
+             ? Math.min(window.devicePixelRatio||1, 2.5) : 1;
+  DPR = want;
+  W = cv.width  = Math.round(innerWidth  * DPR);
+  H = cv.height = Math.round(innerHeight * DPR);
+  cv.style.width = innerWidth+'px'; cv.style.height = innerHeight+'px';
+  sizeBuffer();
+}
+function sizeBuffer(){
+  oW = Math.max(40, Math.round(innerWidth  * scale));
+  oH = Math.max(40, Math.round(innerHeight * scale));
+  off.width = oW; off.height = oH;
+  mid.width = oW; mid.height = oH;
+  img = og.createImageData(oW, oH);
+}
+addEventListener('resize', resize);
+
+/* ---------------------------------------------------------------- breath */
+/* 4 in, 1 hold, 6 out, 1 rest — the app's Long Exhale, near enough */
+var SEG = [['Inhale',4],['Hold',1],['Exhale',6],['Rest',1]];
+var CYCLE = 12;
+function breath(t){
+  var u = t % CYCLE, acc = 0, i, s, k;
+  for(i=0;i<SEG.length;i++){
+    s = SEG[i];
+    if(u < acc + s[1]){
+      k = (u - acc) / s[1];
+      if(s[0]==='Inhale') return {lung: ease(k),     name:'Inhale'};
+      if(s[0]==='Hold')   return {lung: 1,           name:'Hold'};
+      if(s[0]==='Exhale') return {lung: 1-ease(k),   name:'Exhale'};
+      return {lung: 0, name:'Rest'};
+    }
+    acc += s[1];
+  }
+  return {lung:0, name:'Rest'};
+}
+function ease(k){ return k*k*(3-2*k); }          /* smoothstep */
+
+/* ------------------------------------------------------------- palettes */
+/* Warm night. Deep plum through magenta to amber, pale at the escape edge.
+   Sleep runs warm on purpose — a cyan bedtime screen is the wrong hue. */
+function buildPal(warm){
+  var p = new Uint8Array(256*3), i, t, r, gg, b;
+  for(i=0;i<256;i++){
+    t = i/255;
+    /* three-stop ramp, eased so the bands do not read as contour lines */
+    /* The far field escapes instantly and must stay near black — this is a
+       bedtime screen. Only the fringe hugging the boundary is allowed to burn. */
+    if(t < 0.40){
+      var k = t/0.40; k = k*k;                               /* hold the dark */
+      r = 5 + 38*k; gg = 2 + 12*k; b = 11 + 58*k;            /* black -> deep plum */
+    } else if(t < 0.76){
+      var k2 = (t-0.40)/0.36; k2 = k2*k2;
+      r = 43 + 128*k2; gg = 14 + 40*k2; b = 69 + 78*k2;      /* plum -> magenta */
+    } else {
+      var k3 = (t-0.76)/0.24;
+      r = 171 + 78*k3; gg = 54 + 150*k3; b = 147 + 20*k3;    /* magenta -> amber */
+    }
+    /* warm shifts the whole ramp toward the amber end without touching hue order */
+    r = Math.min(255, r*(1+0.16*warm));
+    b = Math.max(0,   b*(1-0.20*warm));
+    p[i*3]=r|0; p[i*3+1]=gg|0; p[i*3+2]=b|0;
+  }
+  return p;
+}
+var PAL = buildPal(0), PAL_WARM = buildPal(1);
+
+/* ------------------------------------------------------------ the kernel */
+/* Escape-time Julia. Smooth (fractional) iteration count, so the colour
+   is continuous instead of stepping in visible rings. */
+function julia(cx, cy, half, iter, pal, glowIn){
+  var d = img.data, px, py, x, y, x2, y2, i, n, t, zx, zy, idx=0, m;
+  var sx = (half*2)/oW, sy = (half*2*(oH/oW))/oH;
+  var ox = -half, oy = -half*(oH/oW);
+  var LN2 = Math.LN2, inv = 1/iter;
+
+  for(py=0; py<oH; py++){
+    y = oy + py*sy;
+    for(px=0; px<oW; px++){
+      x = ox + px*sx;
+      zx = x; zy = y; i = 0;
+      for(;;){
+        x2 = zx*zx; y2 = zy*zy;
+        if(x2 + y2 > 64 || i >= iter) break;
+        zy = 2*zx*zy + cy;
+        zx = x2 - y2 + cx;
+        i++;
+      }
+      if(i >= iter){
+        /* interior: a faint warm core so the body is not a dead hole */
+        m = Math.sqrt(zx*zx + zy*zy);
+        t = Math.max(0, 1 - m*0.55) * glowIn;
+        d[idx++] = (22 + 46*t)|0;
+        d[idx++] = (10 + 22*t)|0;
+        d[idx++] = (34 + 30*t)|0;
+        d[idx++] = 255;
+      } else {
+        m = Math.sqrt(zx*zx + zy*zy);
+        n = i + 1 - Math.log(Math.log(m))/LN2;
+        t = n*inv; if(t<0) t=0; else if(t>1) t=1;
+        t = Math.pow(t, 0.92);                 /* keep the far field dark */
+        n = (t*255)|0; n = n*3;
+        d[idx++] = pal[n]; d[idx++] = pal[n+1]; d[idx++] = pal[n+2]; d[idx++] = 255;
+      }
+    }
+  }
+  og.putImageData(img, 0, 0);
+}
+
+/* Upscale with bloom. The blur is free — it is just the browser's own
+   smoothing on the way up — and two additive passes give the halo. */
+function blit(bloom){
+  var src = off;
+  if(bloom > 0){
+    /* assemble the halo at buffer size — two additive offset copies */
+    mg2.globalCompositeOperation='source-over'; mg2.globalAlpha=1;
+    mg2.drawImage(off, 0, 0);
+    mg2.globalCompositeOperation='lighter';
+    var s1=1.035, s2=1.11;
+    mg2.globalAlpha = Math.min(0.55, 0.30*bloom);
+    mg2.drawImage(off, -(oW*(s1-1))/2, -(oH*(s1-1))/2, oW*s1, oH*s1);
+    mg2.globalAlpha = Math.min(0.40, 0.18*bloom);
+    mg2.drawImage(off, -(oW*(s2-1))/2, -(oH*(s2-1))/2, oW*s2, oH*s2);
+    mg2.globalAlpha=1; mg2.globalCompositeOperation='source-over';
+    src = mid;
+  }
+  /* one upscale. 'low' is bilinear — cheaper AND blurrier, which is the look. */
+  g.imageSmoothingEnabled = true;
+  g.imageSmoothingQuality = 'low';
+  g.globalCompositeOperation = 'source-over';
+  g.globalAlpha = 1;
+  g.drawImage(src, 0, 0, W, H);
+}
+
+/* ============================== THE CANDIDATES ==============================
+   Each returns the c it wants for this breath, plus how to render it.
+   The period-2 bulb is the disc |c + 1| < 1/4: inside it the Julia set is
+   one connected body, outside it shatters into dust. That boundary is the
+   whole trick behind Dissolve.
+   ========================================================================= */
+var VARIANTS = [
+  {
+    id:'dissolve', name:'Dissolve',
+    blurb:'c crosses the edge of the period-2 bulb with the breath. Inhale and the '+
+          'form gathers into one body; exhale and it disintegrates into dust. The '+
+          'mathematics hands you the metaphor.',
+    step:function(t, lung){
+      var th = 0.38 + t*0.035;
+      var r  = 0.335 - 0.150*lung;        /* 0.185 inside .. 0.335 outside */
+      return {cx: -1 + r*Math.cos(th), cy: r*Math.sin(th),
+              half: 1.98 - 0.12*lung, bloom: 0.75, warm: 0.35, glow: 0.9};
+    }
+  },
+  {
+    id:'filigree', name:'Filigree',
+    blurb:'c hovers at the golden-mean Siegel point on the cardioid edge — the most '+
+          'intricate boundary in the family. It never breaks apart; the breath only '+
+          'opens and closes the lace.',
+    step:function(t, lung){
+      /* c = e^(2πi/φ)/2 − e^(4πi/φ)/4, the classic Siegel disc parameter */
+      var w = 0.0022 + 0.0026*(1-lung), th = t*0.33;
+      return {cx: -0.390541 + w*Math.cos(th),
+              cy:  0.586788 + w*Math.sin(th),
+              half: 1.42 - 0.12*lung, bloom: 0.70, warm: 0.20, glow: 0.85};
+    }
+  },
+  {
+    id:'rabbit', name:'Rabbit',
+    blurb:'Douady’s rabbit — a connected set with three-fold symmetry, so it '+
+          'reads as a body rather than a cloud. The breath turns and swells it.',
+    step:function(t, lung){
+      var w = 0.0075 + 0.0065*lung, th = t*0.28;
+      return {cx: -0.1226 + w*Math.cos(th), cy: 0.7449 + w*Math.sin(th),
+              half: 1.72 - 0.22*lung, bloom: 0.58, warm: 0.55, glow: 1.0};
+    }
+  },
+  {
+    id:'smoke', name:'Smoke',
+    blurb:'The same maths deliberately under-resolved: few iterations, heavy bloom, '+
+          'computed tiny and scaled up. Aimed squarely at the note about Ink — '+
+          'diffuse and coloured rather than a contained blob.',
+    lowIter:0.42, lowRes:0.62,
+    step:function(t, lung){
+      var th = t*0.11;
+      return {cx: -0.7462 + 0.055*Math.cos(th) + 0.020*lung,
+              cy:  0.1112 + 0.055*Math.sin(th),
+              half: 2.15 - 0.30*lung, bloom: 1.5, warm: 0.85, glow: 1.4};
+    }
+  },
+  {
+    id:'coral', name:'Coral',
+    blurb:'Not a Julia set — a recursive branching form, for contrast. Cheap to run '+
+          'and it grows with the breath, but it is drawn rather than discovered.',
+    custom:true
+  }
+];
+var vi = 0;
+
+/* ------------------------------------------------------- Coral (L-system-ish) */
+function drawCoral(t, lung){
+  g.fillStyle='#050308'; g.fillRect(0,0,W,H);
+  var base = Math.min(W,H);
+  g.lineCap='round';
+  g.globalCompositeOperation='lighter';
+  function branch(x, y, ang, len, w, depth, seed){
+    if(depth > 7 || len < base*0.006) return;
+    var sway = Math.sin(t*0.7 + depth*0.8 + seed) * (0.05 + 0.10*(1-lung)) * (depth/7);
+    var a = ang + sway;
+    var x2 = x + Math.cos(a)*len, y2 = y + Math.sin(a)*len;
+    var k = depth/7;
+    g.strokeStyle = 'rgba(' + ((150+90*k)|0) + ',' + ((70+80*k)|0) + ',' +
+                    ((190-80*k)|0) + ',' + (0.16 + 0.20*(1-k)) + ')';
+    g.lineWidth = Math.max(0.6, w);
+    g.beginPath(); g.moveTo(x,y); g.lineTo(x2,y2); g.stroke();
+    var spread = 0.34 + 0.20*lung;
+    var shrink = 0.70 + 0.06*lung;
+    branch(x2, y2, a - spread, len*shrink, w*0.68, depth+1, seed+1.7);
+    branch(x2, y2, a + spread, len*shrink, w*0.68, depth+1, seed+3.1);
+    if(depth < 3) branch(x2, y2, a + 0.04, len*shrink*0.82, w*0.55, depth+2, seed+5.5);
+  }
+  var n = 5;
+  for(var i=0;i<n;i++){
+    var a0 = -Math.PI/2 + (i-(n-1)/2)*0.42;
+    branch(W/2, H*0.86, a0, base*(0.115 + 0.045*lung), base*0.012, 0, i*2.3);
+  }
+  g.globalCompositeOperation='source-over';
+}
+
+/* ------------------------------------------------- the catalogue inset */
+/* The Mandelbrot set is the index of the Julia sets: it marks exactly which
+   c values give a connected one. Rendered once, then just a moving dot. */
+var mapCv = document.getElementById('map'), mg = mapCv.getContext('2d');
+var MW = mapCv.width, MH = mapCv.height;
+var MX0 = -2.15, MX1 = 0.72, MY0 = -1.22, MY1 = 1.22;
+var mapImg = null;
+(function renderMap(){
+  var d = mg.createImageData(MW, MH), i, px, py, x, y, zx, zy, x2, y2, n, idx=0;
+  for(py=0; py<MH; py++){
+    y = MY0 + (py/MH)*(MY1-MY0);
+    for(px=0; px<MW; px++){
+      x = MX0 + (px/MW)*(MX1-MX0);
+      zx=0; zy=0; n=0;
+      for(;;){
+        x2=zx*zx; y2=zy*zy;
+        if(x2+y2>4 || n>=90) break;
+        zy = 2*zx*zy + y; zx = x2 - y2 + x; n++;
+      }
+      if(n>=90){ d.data[idx++]=214; d.data[idx++]=170; d.data[idx++]=118; d.data[idx++]=255; }
+      else {
+        var k = n/90;
+        d.data[idx++]=(24+58*k)|0; d.data[idx++]=(14+26*k)|0;
+        d.data[idx++]=(44+66*k)|0; d.data[idx++]=255;
+      }
+    }
+  }
+  mapImg = d;
+})();
+function paintMap(cx, cy){
+  mg.putImageData(mapImg, 0, 0);
+  var px = (cx - MX0)/(MX1-MX0)*MW, py = (cy - MY0)/(MY1-MY0)*MH;
+  mg.beginPath(); mg.arc(px, py, 4.4, 0, 6.2832);
+  mg.strokeStyle='rgba(246,239,231,.92)'; mg.lineWidth=1.4; mg.stroke();
+  mg.beginPath(); mg.arc(px, py, 1.5, 0, 6.2832);
+  mg.fillStyle='#f6efe7'; mg.fill();
+}
+
+/* ------------------------------------------------------------- the loop */
+var t0 = performance.now()/1000, fpsAcc=[], lastFrame=performance.now();
+
+function frame(){
+  var now = performance.now();
+  var dt = now - lastFrame; lastFrame = now;
+  fpsAcc.push(1000/Math.max(1,dt));
+  if(fpsAcc.length > 30) fpsAcc.shift();
+
+  var t = now/1000 - t0;
+  var br = breath(t);
+  var V = VARIANTS[vi];
+
+  if(V.custom){
+    drawCoral(t, br.lung);
+    elCval.textContent = 'no c — drawn, not discovered';
+  } else {
+    var s = V.step(t, br.lung);
+    var it = Math.round(maxIter * (V.lowIter || 1));
+    /* Smoke wants to be computed even smaller than the slider says */
+    var want = Math.max(30, Math.round(innerWidth * scale * (V.lowRes || 1)));
+    if(Math.abs(oW - want) > 2){
+      oW = want;
+      oH = Math.max(30, Math.round(innerHeight * scale * (V.lowRes || 1)));
+      off.width=oW; off.height=oH; mid.width=oW; mid.height=oH;
+      img = og.createImageData(oW, oH);
+    }
+    julia(s.cx, s.cy, s.half, it, s.warm > 0.5 ? PAL_WARM : PAL, s.glow);
+    blit(s.bloom);
+    paintMap(s.cx, s.cy);
+    elCval.textContent = 'c = ' + s.cx.toFixed(3) +
+                         (s.cy < 0 ? ' − ' : ' + ') + Math.abs(s.cy).toFixed(3) + 'i';
+  }
+
+  elPhase.firstChild.nodeValue = br.name;
+
+  if(fpsAcc.length > 8){
+    var f = 0, i;
+    for(i=0;i<fpsAcc.length;i++) f += fpsAcc[i];
+    f = f/fpsAcc.length;
+    elFps.firstChild.textContent = f.toFixed(0);
+    elFps.className = f < 45 ? 'warn' : '';
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ------------------------------------------------------------------- ui */
+var tabs = document.getElementById('tabs');
+VARIANTS.forEach(function(v, i){
+  var b = document.createElement('div');
+  b.className = 'tab' + (i===0?' on':'');
+  b.textContent = v.name;
+  b.onclick = function(){ select(i); };
+  tabs.appendChild(b);
+});
+function select(i){
+  vi = i;
+  var kids = tabs.children, k;
+  for(k=0;k<kids.length;k++) kids[k].className = 'tab' + (k===i?' on':'');
+  elName.textContent = VARIANTS[i].name;
+  elBlurb.textContent = VARIANTS[i].blurb;
+  document.getElementById('mapWrap').style.opacity = VARIANTS[i].custom ? 0.25 : 1;
+  resize();
+}
+elRes.oninput = function(){
+  scale = this.value/100; elLRes.textContent = this.value + '%'; sizeBuffer();
+};
+elIt.oninput = function(){
+  maxIter = +this.value; elLIt.textContent = this.value;
+};
+
+resize();
+select(0);
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>

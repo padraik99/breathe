@@ -2,6 +2,35 @@
 
 Newest first. Dates are when the change landed in the repo.
 
+## 2026-09-08 — Nothing was ever being saved
+
+**Fixed: every setting, and the whole practice log, had been writing to the
+wrong key.** `LS` was the localStorage key in `_state.js`. `LS` was also the
+layout scale in the visual files. The source files are concatenated into one
+function scope at build time, so on the first animation frame the layout code
+overwrote the key: `save()` had been calling
+`localStorage.setItem(0.5, …)` while `load()` read `breathe.v2`, which no
+longer existed. Nothing threw. Storage looked healthy. Settings simply
+evaporated on every reload, which is why "pick up where I left off" never
+worked and why the log did not survive updates.
+
+The layout variable is now `LSC`. `tools/check.mjs` fails the build if any
+top-level name is declared in two source files, so this class of bug cannot
+come back — verified by reintroducing the collision and watching the gate
+reject it.
+
+**The transition cue is no longer a note.** Three pitched versions failed
+here. A pitched cue has to find a hole in the harmony *and* a level that suits
+both a dense background and silence, and those constraints pull against each
+other. Noise has no fundamental, so it cannot be masked harmonically — which
+leaves only the level, and the level is now measured off the bed with an
+`AnalyserNode` rather than guessed. Settings → Transition cue offers **Drops**
+(default), **Shaker**, the old **Bell**, and **Off**; Cue level sets how far
+above the background it sits — Soft, Medium (+4 dB) or Clear. Across the three
+backgrounds, which differ by 11 dB, the same setting gives the same margin.
+
+With the cue Off the closing ring brightens to carry the change on its own.
+
 ## 2026-09-04 — Settings stays open, and the app says which build it is
 
 - **Fixed: Settings dismissed itself when you scrolled back up.** The

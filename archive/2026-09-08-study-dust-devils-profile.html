@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#050308">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Dust Devils</title>
+</head>
+<body>
+<style>
+  :root{
+    --bg0:#1f1633; --bg1:#050308;
+    --amber:#e0a86a; --tx:#f6efe7;
+    --tx2:rgba(246,239,231,.62); --tx3:rgba(246,239,231,.34);
+    --edge:rgba(255,224,190,.16);
+    --safe-b:env(safe-area-inset-bottom,0px);
+    --safe-t:env(safe-area-inset-top,0px);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;margin:0;overflow:hidden;background:#050308}
+  body{
+    color:var(--tx);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none;
+    touch-action:manipulation;
+  }
+  #c{position:fixed;inset:0;width:100%;height:100%;display:block}
+  #top{
+    position:fixed;left:0;right:0;top:0;z-index:5;pointer-events:none;
+    padding:calc(var(--safe-t) + 14px) 18px 0;
+    display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  }
+  #name{font-size:15px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
+  #blurb{font-size:12.5px;line-height:1.45;color:var(--tx2);margin-top:5px;max-width:23em}
+  #fps{font-variant-numeric:tabular-nums;font-size:12px;color:var(--tx2);
+    text-align:right;white-space:nowrap;line-height:1.5}
+  #fps b{display:block;font-size:19px;color:var(--tx);font-weight:600}
+  #fps.warn b{color:#e8926f}
+  #phase{
+    position:fixed;z-index:5;left:18px;pointer-events:none;
+    bottom:calc(var(--safe-b) + 156px);
+    font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--tx2);
+  }
+  #phase span{display:block;font-size:9.5px;letter-spacing:.08em;color:var(--tx3);margin-top:4px}
+  #dock{
+    position:fixed;left:0;right:0;bottom:0;z-index:6;
+    padding:12px 12px calc(var(--safe-b) + 12px);
+    background:linear-gradient(180deg,rgba(5,3,8,0) 0%,rgba(5,3,8,.82) 34%,rgba(5,3,8,.95) 100%);
+  }
+  #tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  #tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;padding:9px 13px;border-radius:11px;font-size:12.5px;
+    border:1px solid var(--edge);color:var(--tx2);background:rgba(255,240,220,.04);
+    white-space:nowrap;cursor:pointer;transition:color .2s,background .2s,border-color .2s}
+  .tab.on{color:#141013;background:var(--amber);border-color:var(--amber);font-weight:600}
+  #knobs{display:flex;align-items:center;gap:14px;margin-top:11px;padding:0 2px}
+  .knob{flex:1;min-width:0}
+  .knob label{display:flex;justify-content:space-between;font-size:10.5px;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-bottom:5px}
+  .knob label b{color:var(--tx2);font-weight:600;font-variant-numeric:tabular-nums}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;
+    background:transparent;margin:0}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--edge);border-radius:2px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;
+    border-radius:50%;background:var(--amber);margin-top:-7.5px;border:none}
+  input[type=range]::-moz-range-track{height:2px;background:var(--edge);border-radius:2px}
+  input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;
+    background:var(--amber);border:none}
+  #hint{font-size:10.5px;color:var(--tx3);text-align:center;margin-top:9px;line-height:1.5}
+</style>
+
+<canvas id="c"></canvas>
+
+<div id="top">
+  <div><div id="name">Dust Devil</div><div id="blurb"></div></div>
+  <div id="fps"><b>—</b>fps</div>
+</div>
+
+<div id="phase">Inhale<span id="sub">tap anywhere to raise one</span></div>
+
+<div id="dock">
+  <div id="tabs"></div>
+  <div id="knobs">
+    <div class="knob">
+      <label>Leaves <b id="lN">180</b></label>
+      <input type="range" id="n" min="40" max="420" value="180">
+    </div>
+    <div class="knob">
+      <label>Breeze <b id="lW">Light</b></label>
+      <input type="range" id="w" min="0" max="100" value="26">
+    </div>
+  </div>
+  <div id="hint">Tap anywhere to raise a devil. They also come on their own, rarely.</div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* =====================================================================
+   Not a fractal — but the same plane.
+
+   Two-dimensional incompressible flow IS complex analysis: a point vortex
+   has complex potential W(z) = (-iΓ/2π)·ln(z − z₀), a sink is the same
+   logarithm with a real coefficient, and a dust devil is a vortex plus a
+   sink plus lift. So the Julia sets and this share a lineage and differ
+   in the verb: those iterate a map, this integrates a field.
+
+   The vortices are Lamb–Oseen rather than ideal — the (1 − e^(−r²/rc²))
+   term gives them a viscous core, so the velocity goes to zero at the
+   centre instead of to infinity. Ideal vortices fling particles to the
+   moon the moment one passes near the middle.
+
+   The first build put the whole thing in the screen plane, which meant
+   you were looking DOWN the throat of the twister — a plan view, correct
+   but not what anyone means by a dust devil. The circulation now happens
+   in the horizontal x–z plane about a vertical axis, and the scene is
+   projected to the screen. Particles behind the axis are smaller, dimmer
+   and drawn first; particles in front sweep past large and bright. That
+   projection is the difference between a whirlpool and a column.
+   ===================================================================== */
+
+var cv=document.getElementById('c'), g=cv.getContext('2d');
+var W=0,H=0,DPR=1, GROUND=0;
+
+function resize(){
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  W=cv.width=Math.round(innerWidth*DPR);
+  H=cv.height=Math.round(innerHeight*DPR);
+  cv.style.width=innerWidth+'px'; cv.style.height=innerHeight+'px';
+  GROUND=H*0.815;
+  grad=g.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'#1f1633'); grad.addColorStop(0.78,'#050308');
+  if(leaves.length) scatter();
+}
+var grad=null;
+addEventListener('resize', resize);
+
+/* ---------------------------------------------------------------- breath */
+var SEG=[['Inhale',4],['Hold',1],['Exhale',6],['Rest',1]], CYCLE=12;
+function breath(t){
+  var u=t%CYCLE, acc=0, i, s, k;
+  for(i=0;i<SEG.length;i++){
+    s=SEG[i];
+    if(u<acc+s[1]){
+      k=(u-acc)/s[1]; k=k*k*(3-2*k);
+      if(s[0]==='Inhale') return {lung:k, name:'Inhale'};
+      if(s[0]==='Hold')   return {lung:1, name:'Hold'};
+      if(s[0]==='Exhale') return {lung:1-k, name:'Exhale'};
+      return {lung:0, name:'Rest'};
+    }
+    acc+=s[1];
+  }
+  return {lung:0,name:'Rest'};
+}
+
+/* ---------------------------------------------------------------- devils */
+/* circ  — Γ, the circulation. sign decides which way it turns
+   sink  — inward draw, what makes the column narrow as it rises
+   lift  — the updraft that carries anything caught into the air
+   core  — rc, the viscous core radius                                     */
+var devils=[];
+function raise(x, y, strength){
+  var base=Math.min(W,H);
+  devils.push({
+    x:x, y:GROUND, z:(Math.random()-0.5)*base*0.55,
+    height: base*(0.30+0.22*Math.random()),
+    vx:(Math.random()<0.5?-1:1)*base*(0.020+Math.random()*0.030),
+    vz:(Math.random()-0.5)*base*0.010,
+    circ:(Math.random()<0.5?-1:1)*base*(78+30*Math.random())*strength,
+    sink:base*(9.0+7.0*Math.random())*strength,
+    lift:base*(0.54+0.14*Math.random())*strength,
+    core:base*(0.095+0.030*Math.random()),
+    age:0, life:6.5+Math.random()*6.0, seed:Math.random()*99
+  });
+  if(devils.length>5) devils.shift();
+}
+
+/* velocity of the air at a point — superpose every devil, then the breeze */
+var VX=0, VY=0, VZ=0;
+function fieldAt(x, y, z, wind){
+  var ux=wind, uy=0, uz=0, i, D, dx, dz, r2, k, env, rise, tall;
+  for(i=0;i<devils.length;i++){
+    D=devils[i];
+    /* a devil fades in and out rather than switching on */
+    env = Math.sin(Math.PI*Math.min(1,Math.max(0,D.age/D.life)));
+    if(env<=0.001) continue;
+    /* distance from the vertical axis, measured on the ground plane only —
+       this is what makes it a column rather than a whirlpool */
+    dx = x-D.x; dz = z-D.z;
+    r2 = dx*dx + dz*dz; if(r2<1) r2=1;
+    /* Lamb–Oseen: full circulation far out, zero at the very centre */
+    k = (1 - Math.exp(-r2/(D.core*D.core))) / r2 * env;
+    /* strongest near the ground, fraying with height */
+    tall = Math.exp(-Math.max(0, GROUND-y)/D.height);
+    ux += D.circ * (-dz) * k * tall;
+    uz += D.circ * ( dx) * k * tall;
+    /* the sink: air drawn in toward the axis */
+    ux -= D.sink * dx * k;
+    uz -= D.sink * dz * k;
+    /* updraft, strongest in the core */
+    rise = Math.exp(-r2/(D.core*D.core*7.0)) * env;
+    uy -= D.lift * rise;
+  }
+  VX=ux; VY=uy; VZ=uz;
+}
+
+/* ---------------------------------------------------------------- leaves */
+var leaves=[];
+var LEAF_HUES=[
+  [214,150,86],[196,116,64],[168,96,72],[228,178,112],[150,104,120],
+  [122,88,104],[206,140,96],[176,128,80]
+];
+/* three species rather than one silhouette repeated: a long willow blade, a
+   round poplar, and a notched maple. Shape, aspect and drag travel together,
+   because a leaf's outline is why it falls the way it does. */
+var SPECIES=[
+  {ar:0.22, drag:[1.4,0.7], notch:0},   /* willow — knifes through, little flutter */
+  {ar:0.78, drag:[0.7,0.5], notch:0},   /* poplar — catches the air, tumbles */
+  {ar:0.55, drag:[0.9,0.6], notch:1}    /* maple  — in between, and lobed */
+];
+function makeLeaf(){
+  var base=Math.min(W,H), sp=(Math.random()*SPECIES.length)|0, S=SPECIES[sp];
+  /* squared random keeps most of them small: a few big ones read as near,
+     which is most of what sells the depth */
+  var sz=Math.random(); sz=sz*sz;
+  return {
+    x:Math.random()*W, y:0, z:(Math.random()-0.5)*Math.min(W,H)*0.9,
+    vx:0, vy:0, vz:0,
+    a:Math.random()*6.283, spin:0, bed:Math.random(),
+    sp:sp, len:base*(0.0060+sz*0.0105),
+    drag:S.drag[0] + Math.random()*S.drag[1],
+    hue:LEAF_HUES[(Math.random()*LEAF_HUES.length)|0],
+    rest:true, flut:Math.random()*6.283
+  };
+}
+function scatter(){
+  for(var i=0;i<leaves.length;i++){
+    var L=leaves[i];
+    if(L.rest){ L.y=GROUND-L.len*0.35;
+                 L.x=Math.random()*W;
+                 L.z=(Math.random()-0.5)*Math.min(W,H)*0.9;
+                 L.a=(Math.random()<0.5?0:Math.PI)+(Math.random()-0.5)*0.5; }
+  }
+}
+function setCount(n){
+  while(leaves.length<n){ var L=makeLeaf(); L.y=GROUND-L.len*0.35; leaves.push(L); }
+  if(leaves.length>n) leaves.length=n;
+}
+
+/* ------------------------------------------------------------------ motes */
+var motes=[];
+function setMotes(n){
+  var base=Math.min(W,H);
+  while(motes.length<n) motes.push({
+    x:Math.random()*W, y:H*(0.22+0.78*Math.sqrt(Math.random())),
+    z:(Math.random()-0.5)*base*1.1, vx:0, vy:0, vz:0,
+    r:base*(0.0012+Math.random()*0.0030), drag:1.6+Math.random()*1.4,
+    a:0.10+Math.random()*0.30
+  });
+  if(motes.length>n) motes.length=n;
+}
+
+/* ---------------------------------------------------------------- scenes */
+var SCENES=[
+  {id:'devil', name:'Dust Devil',
+   blurb:'One column, rarely. Leaves lie still until it passes, get taken up the '+
+         'core, and settle again downwind. The breath decides how often and how hard.',
+   leaves:1.0, motes:70, windMul:0.35, rate:0.055, moteOnly:false},
+  {id:'canal', name:'Canal',
+   blurb:'A steady breeze along the towpath with devils spinning out of it. Busier — '+
+         'closer to what you actually walked through than to a bedtime screen.',
+   leaves:1.0, motes:140, windMul:1.0, rate:0.13, moteOnly:false},
+  {id:'motes', name:'Motes',
+   blurb:'The same flow with no leaves in it — only fine dust. Much sparser, and '+
+         'much closer to the brief you started with: something that looks alive '+
+         'without asking to be watched.',
+   leaves:0.0, motes:420, windMul:0.5, rate:0.075, moteOnly:true}
+];
+var si=0;
+
+/* ------------------------------------------------------------------- loop */
+var t0=performance.now()/1000, lastF=performance.now(), fpsAcc=[];
+var nLeaf=180, windUI=0.26;
+
+function step(dt, t, lung){
+  var S=SCENES[si], base=Math.min(W,H);
+  var wind = base*0.055*windUI*S.windMul*(0.65+0.55*lung);
+
+  /* devils arrive on their own, more readily on the inhale */
+  if(Math.random() < S.rate*dt*(0.35+1.5*lung)) raise(Math.random()*W, undefined, 0.7+0.6*lung);
+
+  var i, D;
+  for(i=devils.length-1;i>=0;i--){
+    D=devils[i];
+    D.age+=dt;
+    D.x += D.vx*dt + wind*dt*0.55;
+    D.z += D.vz*dt;
+    if(D.age>D.life || D.x<-W*0.3 || D.x>W*1.3) devils.splice(i,1);
+  }
+
+  var grav = base*0.55;
+  if(!S.moteOnly){
+    for(i=0;i<leaves.length;i++){
+      var L=leaves[i];
+      fieldAt(L.x, L.y, L.z, wind);
+      /* the air pulls the leaf toward the local flow; drag is how much it listens */
+      var pull=Math.min(1, L.drag*dt*3.0);
+      L.vx += (VX - L.vx)*pull;
+      L.vz += (VZ - L.vz)*pull;
+      L.vy += (VY - L.vy)*pull + grav*dt;
+      /* flutter: a leaf does not fall straight, it tips and slips sideways */
+      L.flut += dt*(3.0 + Math.abs(L.vy)/base*7);
+      if(!L.rest){
+        var fl=Math.sin(L.flut)*base*0.16*dt*(1-SPECIES[L.sp].ar*0.6);
+        L.vx += fl; L.vz += Math.cos(L.flut)*base*0.10*dt;
+      }
+      L.x += L.vx*dt; L.y += L.vy*dt; L.z += L.vz*dt;
+      if(L.z < -base*0.62){ L.z=-base*0.62; L.vz*=-0.3; }
+      if(L.z >  base*0.62){ L.z= base*0.62; L.vz*=-0.3; }
+      L.spin = L.spin*0.90 + (L.vx/base)*3.2*dt*60*0.02;
+      L.a += L.spin*dt*3.0 + (L.rest?0:Math.cos(L.flut)*dt*1.2);
+
+      var floorY = GROUND - L.len*0.35;
+      if(L.y >= floorY){
+        L.y = floorY;
+        /* settle flat rather than keeping whatever angle it was flying at */
+        L.a += (((L.a%Math.PI)<Math.PI/2 ? 0 : Math.PI) - (L.a%Math.PI))*Math.min(1,dt*3);
+        L.vy = 0; L.vx *= 0.55; L.vz *= 0.55;
+        if(Math.abs(L.vx) < base*0.01){ L.vx=0; L.vz=0; L.rest=true; }
+      } else L.rest=false;
+
+      if(L.x < -W*0.1) L.x += W*1.2;
+      if(L.x >  W*1.1) L.x -= W*1.2;
+      if(L.y < -H*0.15){ L.y=-H*0.14; L.vy=Math.abs(L.vy)*0.2; }
+    }
+  }
+
+  var base2=Math.min(W,H);
+  for(i=0;i<motes.length;i++){
+    var M=motes[i];
+    fieldAt(M.x, M.y, M.z, wind);
+    var mp=Math.min(1, M.drag*dt*3.0);
+    M.vx += (VX - M.vx)*mp;
+    M.vz += (VZ - M.vz)*mp;
+    M.vy += (VY - M.vy)*mp + grav*0.006*dt;
+    M.x += M.vx*dt; M.y += M.vy*dt; M.z += M.vz*dt;
+    if(M.z < -base2*0.7) M.z += base2*1.4;
+    if(M.z >  base2*0.7) M.z -= base2*1.4;
+    if(M.x<-20) M.x+=W+40; if(M.x>W+20) M.x-=W+40;
+    if(M.y<-20) M.y+=H+40; if(M.y>H+20) M.y-=H+40;
+  }
+}
+
+/* ---------------------------------------------------------- projection */
+/* A plain weak-perspective camera. FOV sets how hard the depth bites: at
+   0 everything is flat again and you are back to looking down the throat. */
+var HORIZON = 0;
+function proj(x, y, z){
+  var fov = Math.min(W,H)*1.35;
+  var s = fov/(fov + z);
+  return { x: W/2 + (x - W/2)*s,
+           y: HORIZON + (y - HORIZON)*s,
+           s: s };
+}
+
+function draw(lung){
+  HORIZON = H*0.40;
+  /* the gradient painted at low alpha each frame gives trails without
+     losing the warm sky behind them */
+  g.globalCompositeOperation='source-over';
+  g.globalAlpha=0.44; g.fillStyle=grad; g.fillRect(0,0,W,H);
+  g.globalAlpha=1;
+
+  var i;
+  /* far things first, so what is in front actually looks in front */
+  order.length = 0;
+  for(i=0;i<motes.length;i++) order.push(motes[i]);
+  for(i=0;i<leaves.length;i++) order.push(leaves[i]);
+  order.sort(function(a,b){ return b.z - a.z; });
+
+  for(i=0;i<order.length;i++){
+    var P = order[i], pr = proj(P.x, P.y, P.z);
+    if(pr.s <= 0.05) continue;
+    if(P.r !== undefined){
+      /* a mote */
+      g.globalCompositeOperation='lighter';
+      g.globalAlpha = P.a * pr.s * (0.45+0.55*lung);
+      g.fillStyle='#e0c8a8';
+      g.beginPath(); g.arc(pr.x, pr.y, Math.max(0.4,P.r*pr.s), 0, 6.2832); g.fill();
+      g.globalCompositeOperation='source-over';
+      g.globalAlpha = 1;
+      continue;
+    }
+    var c=P.hue, S=SPECIES[P.sp];
+    var lift = Math.min(1, Math.max(0,(GROUND-P.y)/(H*0.55)));
+    var L = P.len*pr.s;
+    /* depth also dims: distance is haze, not just size */
+    var spd = Math.min(1, Math.hypot(P.vx,P.vy,P.vz)/(Math.min(W,H)*0.55));
+    var al = (0.30 + 0.54*lift + 0.22*spd) * (0.42+0.58*pr.s);
+    if(al>0.95) al=0.95;
+    g.save();
+    g.translate(pr.x, pr.y); g.rotate(P.a);
+    g.fillStyle='rgba('+c[0]+','+c[1]+','+c[2]+','+al.toFixed(3)+')';
+    g.beginPath();
+    if(S.notch){
+      /* maple: three lobes a side */
+      g.moveTo(-L,0);
+      g.quadraticCurveTo(-L*0.45,-L*S.ar*1.5, -L*0.15,-L*S.ar*0.55);
+      g.quadraticCurveTo( L*0.10,-L*S.ar*1.8,  L*0.35,-L*S.ar*0.5);
+      g.quadraticCurveTo( L*0.75,-L*S.ar*1.1,  L,0);
+      g.quadraticCurveTo( L*0.45, L*S.ar*1.2, -L*0.10, L*S.ar*0.5);
+      g.quadraticCurveTo(-L*0.55, L*S.ar*1.3, -L,0);
+    } else {
+      g.moveTo(-L,0);
+      g.quadraticCurveTo(0,-L*S.ar, L,0);
+      g.quadraticCurveTo(0, L*S.ar,-L,0);
+    }
+    g.fill();
+    g.restore();
+  }
+}
+var order=[];
+
+function frame(){
+  var now=performance.now(), dt=Math.min(0.05,(now-lastF)/1000); lastF=now;
+  fpsAcc.push(1000/Math.max(1,now-lastF||16)); if(fpsAcc.length>30) fpsAcc.shift();
+  var t=now/1000-t0, br=breath(t);
+  step(dt,t,br.lung);
+  draw(br.lung);
+  document.getElementById('phase').firstChild.nodeValue=br.name;
+  requestAnimationFrame(frame);
+}
+/* fps measured separately so the accumulator above cannot lie about itself */
+var fCount=0, fMark=performance.now();
+setInterval(function(){
+  var now=performance.now(), f=fCount/((now-fMark)/1000);
+  fCount=0; fMark=now;
+  var el=document.getElementById('fps');
+  el.firstChild.textContent=f.toFixed(0);
+  el.className = f<45 ? 'warn':'';
+},1000);
+(function count(){ fCount++; requestAnimationFrame(count); })();
+
+/* --------------------------------------------------------------------- ui */
+var tabs=document.getElementById('tabs');
+SCENES.forEach(function(s,i){
+  var b=document.createElement('div');
+  b.className='tab'+(i===0?' on':''); b.textContent=s.name;
+  b.onclick=function(){ select(i); };
+  tabs.appendChild(b);
+});
+function select(i){
+  si=i;
+  var k=tabs.children, j;
+  for(j=0;j<k.length;j++) k[j].className='tab'+(j===i?' on':'');
+  document.getElementById('name').textContent=SCENES[i].name;
+  document.getElementById('blurb').textContent=SCENES[i].blurb;
+  setCount(Math.round(nLeaf*SCENES[i].leaves));
+  setMotes(SCENES[i].motes);
+  devils.length=0;
+  scatter();
+}
+document.getElementById('n').oninput=function(){
+  nLeaf=+this.value; document.getElementById('lN').textContent=this.value;
+  setCount(Math.round(nLeaf*SCENES[si].leaves));
+};
+var WORDS=['Still','Light','Fresh','Brisk','Strong'];
+document.getElementById('w').oninput=function(){
+  windUI=this.value/100;
+  document.getElementById('lW').textContent=WORDS[Math.min(4,(this.value/25)|0)];
+};
+cv.addEventListener('pointerdown',function(e){
+  var r=cv.getBoundingClientRect();
+  raise((e.clientX-r.left)*DPR, (e.clientY-r.top)*DPR, 1.15);
+});
+
+/* a small hook so the physics can be measured rather than eyeballed */
+window.__stat=function(){
+  var hi=0, mv=0, i, base=Math.min(W,H);
+  for(i=0;i<leaves.length;i++){ var h=(GROUND-leaves[i].y)/base; if(h>hi) hi=h; }
+  for(i=0;i<motes.length;i++){ var m=Math.hypot(motes[i].vx,motes[i].vy,motes[i].vz)/base;
+                               if(m>mv) mv=m; }
+  return {devils:devils.length, maxLeafLift:+hi.toFixed(3), maxMoteSpeed:+mv.toFixed(3),
+          aloft:leaves.filter(function(L){return !L.rest;}).length};
+};
+
+resize(); select(0);
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>

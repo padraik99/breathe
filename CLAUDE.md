@@ -92,6 +92,15 @@ a session never stops mid-out-breath. Dive tables ignore it — they set their o
   past the selected pattern. Measure with `getBoundingClientRect()` against the
   scroll box.
 
+- **One scope, not seven.** `build2.py` concatenates every `_*.js` into a
+  single IIFE, so a top-level `var` in one file is in scope in all of them.
+  `LS` was the localStorage key in `_state.js` and the layout scale in the
+  visual files; the layout code won on the first frame and every `save()` for
+  weeks wrote to a key called `"0.5"`. Nothing threw, and reading the storage
+  code showed nothing wrong — the read was fine, the write went elsewhere.
+  `tools/check.mjs` now fails on any top-level name declared in two files.
+  Short names in separate files are not separate names.
+
 ## Things that look like mistakes but are not
 
 - **System fonts, not Google Fonts.** The app must work offline.
@@ -136,6 +145,15 @@ others. Two lessons already paid for:
 
 Cues that must be heard over the bed get `duckBed()`. The metronome deliberately
 does not — ducking once a second would make the bed pump.
+
+**The transition cue is noise on purpose.** A pitched cue must satisfy two
+constraints simultaneously — a hole in the bed's harmony, and one level that
+works under a dense background and over silence — and they pull against each
+other. Three pitched versions failed, each on a different one. Noise has no
+fundamental, so only the level is left, and `bedLevel()` measures that off an
+`AnalyserNode` on the drone bus instead of guessing. Do not replace it with a
+tone without re-reading this paragraph; the beds differ by 11 dB, and the
+thrum is the loud one, not the shruti.
 
 ## Safety content is not decoration
 

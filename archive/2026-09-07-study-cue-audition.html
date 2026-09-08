@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#050308">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Cue Audition</title>
+</head>
+<body>
+<style>
+  :root{
+    --bg0:#1c1333; --bg1:#050308;
+    --amber:#e0a86a; --plum:#a97fd6;
+    --tx:#f6efe7; --tx2:rgba(246,239,231,.66); --tx3:rgba(246,239,231,.38);
+    --edge:rgba(255,224,190,.17);
+    --safe-b:env(safe-area-inset-bottom,0px);
+    --safe-t:env(safe-area-inset-top,0px);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%}
+  body{
+    color:var(--tx);
+    background:linear-gradient(172deg,var(--bg0) 0%,var(--bg1) 62%) fixed;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none;
+    padding:calc(var(--safe-t) + 20px) 18px calc(var(--safe-b) + 28px);
+    max-width:560px;margin:0 auto;
+  }
+  h1{font-size:16px;letter-spacing:.15em;text-transform:uppercase;margin:0 0 6px}
+  .lede{font-size:13px;line-height:1.55;color:var(--tx2);margin:0 0 22px}
+  h2{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+     color:var(--tx3);margin:26px 0 9px;font-weight:600}
+
+  .row{display:flex;flex-wrap:wrap;gap:7px}
+  .opt{
+    flex:1 1 auto;min-width:88px;padding:11px 12px;border-radius:12px;
+    border:1px solid var(--edge);background:rgba(255,240,220,.04);
+    color:var(--tx2);font-size:13px;text-align:left;cursor:pointer;
+    transition:color .18s,background .18s,border-color .18s;
+  }
+  .opt small{display:block;font-size:10.5px;color:var(--tx3);margin-top:3px;line-height:1.4}
+  .opt.on{background:var(--amber);border-color:var(--amber);color:#141013;font-weight:600}
+  .opt.on small{color:rgba(20,16,19,.72)}
+
+  .knob{margin-top:14px}
+  .knob label{display:flex;justify-content:space-between;font-size:10.5px;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin-bottom:6px}
+  .knob label b{color:var(--amber);font-weight:600;font-variant-numeric:tabular-nums}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:24px;
+    background:transparent;margin:0}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--edge);border-radius:2px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;
+    border-radius:50%;background:var(--amber);margin-top:-8px;border:none}
+  input[type=range]::-moz-range-track{height:2px;background:var(--edge);border-radius:2px}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;
+    background:var(--amber);border:none}
+
+  #go{
+    display:block;width:100%;margin-top:20px;padding:17px;border-radius:15px;
+    border:1px solid var(--amber);background:rgba(224,168,106,.14);
+    color:var(--amber);font-size:14.5px;letter-spacing:.13em;text-transform:uppercase;
+    font-weight:600;cursor:pointer;
+  }
+  #go.on{background:var(--amber);color:#141013}
+
+  #meter{
+    margin-top:16px;padding:13px 14px;border:1px solid var(--edge);border-radius:12px;
+    background:rgba(255,240,220,.03);font-size:11.5px;line-height:1.85;color:var(--tx2);
+    font-variant-numeric:tabular-nums;
+  }
+  #meter b{color:var(--tx);font-weight:600}
+  #bar{height:3px;background:var(--edge);border-radius:2px;margin-top:9px;overflow:hidden}
+  #barIn{height:100%;width:0%;background:var(--amber);transition:width .12s linear}
+  .note{font-size:11.5px;line-height:1.6;color:var(--tx3);margin-top:16px}
+</style>
+
+<h1>Cue Audition</h1>
+<p class="lede">The transition cue, un-pitched. A tone has to find a hole in the harmony
+<em>and</em> a level that works over a dense bed and over silence; those fight each other,
+which is why every version so far has failed one or the other. Noise only has the level
+problem — and that one is solvable, because the level can be measured off the bed
+instead of guessed.</p>
+
+<h2>Background</h2>
+<div class="row" id="beds"></div>
+
+<h2>Cue</h2>
+<div class="row" id="cues"></div>
+
+<div class="knob">
+  <label>Prominence over the bed <b id="lProm">+4 dB</b></label>
+  <input type="range" id="prom" min="-10" max="16" step="1" value="4">
+</div>
+<div class="knob">
+  <label>Master volume <b id="lVol">70%</b></label>
+  <input type="range" id="vol" min="10" max="100" step="1" value="70">
+</div>
+
+<button id="go">Start — cue every 4s</button>
+
+<div id="meter">
+  bed measured <b id="mBed">—</b> · cue gain <b id="mGain">—</b><br>
+  <span id="mNote">tap start; the bed takes a few seconds to come up</span>
+  <div id="bar"><div id="barIn"></div></div>
+</div>
+
+<p class="note">Listen with the phone where you actually use it, at your usual volume.
+The cue should arrive as <em>information</em>, not as an event — you want to notice you
+have been told, not notice a sound. If one is right at a prominence you would not have
+picked, that number matters as much as the choice.</p>
+
+<script>
+(function(){
+'use strict';
+
+/* =====================================================================
+   The beds are lifted verbatim from the app so this is an audition and
+   not an approximation. The cues are all noise-derived: none of them has
+   a fundamental, so none of them can collide with the bed's harmony the
+   way the 293.66 Hz bell did.
+   ===================================================================== */
+
+var A=null, master=null, verb=null, noiseBuf=null;
+var drone=null, droneGain=null, droneFilt=null, ana=null, anaBuf=null;
+var bed='shruti', cueId='shaker', prom=4, vol=0.70, timer=null, running=false;
+
+/* ------------------------------------------------------------- chain */
+function makeVerb(ctx){
+  var len=Math.floor(ctx.sampleRate*5.5), buf=ctx.createBuffer(2,len,ctx.sampleRate);
+  for(var c=0;c<2;c++){
+    var d=buf.getChannelData(c), lp=0;
+    for(var i=0;i<len;i++){
+      var t=i/len, damp=0.35-0.30*t;
+      lp += (Math.random()*2-1 - lp) * Math.max(0.02, damp);
+      d[i] = lp*Math.pow(1-t,2.1)*(i<ctx.sampleRate*0.018?0.22:1)*2.4;
+    }
+  }
+  var cv=ctx.createConvolver(); cv.buffer=buf; return cv;
+}
+function makeNoise(ctx){
+  var len=Math.floor(ctx.sampleRate*2), buf=ctx.createBuffer(1,len,ctx.sampleRate);
+  var d=buf.getChannelData(0), last=0;
+  for(var i=0;i<len;i++){ last=(last+(Math.random()*2-1)*0.32)/1.32; d[i]=last*2.2; }
+  return buf;
+}
+function init(){
+  if(A){ if(A.state==='suspended') A.resume(); return; }
+  var C=window.AudioContext||window.webkitAudioContext; if(!C) return;
+  try{ A=new C({sampleRate:48000, latencyHint:'playback'}); }catch(e){ A=new C(); }
+  try{ if(navigator.audioSession) navigator.audioSession.type='playback'; }catch(e){}
+  var lim=A.createDynamicsCompressor();
+  lim.threshold.value=-6; lim.knee.value=14; lim.ratio.value=4;
+  lim.attack.value=0.006; lim.release.value=0.30;
+  lim.connect(A.destination);
+  master=A.createGain(); master.gain.value=vol; master.connect(lim);
+  verb=makeVerb(A); noiseBuf=makeNoise(A);
+  var vg=A.createGain(); vg.gain.value=.60; verb.connect(vg); vg.connect(master);
+  A.verbIn=verb;
+  if(A.state==='suspended') A.resume();
+}
+
+/* --------------------------------------------------------------- beds */
+/* verbatim from _audio.js — an audition over a fake bed is worthless */
+function startBed(){
+  if(!A || bed==='off' || drone) return;
+  droneFilt=A.createBiquadFilter(); droneFilt.type='lowpass';
+  droneGain=A.createGain(); droneGain.gain.value=0;
+  droneFilt.connect(droneGain); droneGain.connect(master);
+  var dg2=A.createGain(); dg2.gain.value=.45; droneGain.connect(dg2); dg2.connect(A.verbIn);
+
+  /* tap the bed just before the master so we can measure what it is doing */
+  ana=A.createAnalyser(); ana.fftSize=2048; ana.smoothingTimeConstant=0.4;
+  droneGain.connect(ana);
+  anaBuf=new Float32Array(ana.fftSize);
+
+  drone=[];
+  if(bed==='rain'){
+    droneFilt.frequency.value=1100; droneFilt.Q.value=.5;
+    var src=A.createBufferSource(); src.buffer=noiseBuf; src.loop=true;
+    src.connect(droneFilt); src.start(); drone.push(src);
+    var hs=A.createBiquadFilter(); hs.type='highpass'; hs.frequency.value=2600;
+    var hg=A.createGain(); hg.gain.value=.35;
+    var s2=A.createBufferSource(); s2.buffer=noiseBuf; s2.loop=true; s2.playbackRate.value=1.7;
+    s2.connect(hs); hs.connect(hg); hg.connect(droneFilt); s2.start(); drone.push(s2);
+    droneGain.gain.setTargetAtTime(.115, A.currentTime, 2.4);
+    return;
+  }
+  if(bed==='shruti'){
+    droneFilt.frequency.value=980; droneFilt.Q.value=.8;
+    var reed=A.createBiquadFilter(); reed.type='peaking';
+    reed.frequency.value=560; reed.Q.value=1.1; reed.gain.value=6;
+    reed.connect(droneFilt);
+    var rf=[73.42,110.0,146.83,220.0], rg=[.34,.26,.17,.07], lfo=[0.11,0.15,0.09,0.13];
+    for(var j=0;j<rf.length;j++){
+      var ro=A.createOscillator(); ro.type='sawtooth'; ro.frequency.value=rf[j];
+      var rgn=A.createGain(); rgn.gain.value=rg[j];
+      ro.connect(rgn); rgn.connect(reed); ro.start(); drone.push(ro);
+      var lo=A.createOscillator(); lo.type='sine'; lo.frequency.value=lfo[j];
+      var lg=A.createGain(); lg.gain.value=5+j;
+      lo.connect(lg); lg.connect(ro.detune); lo.start(); drone.push(lo);
+    }
+    var air=A.createBufferSource(); air.buffer=noiseBuf; air.loop=true;
+    var ah=A.createBiquadFilter(); ah.type='highpass'; ah.frequency.value=2200;
+    var ag=A.createGain(); ag.gain.value=.05;
+    air.connect(ah); ah.connect(ag); ag.connect(droneFilt); air.start(); drone.push(air);
+    droneGain.gain.setTargetAtTime(.155, A.currentTime, 2.4);
+    return;
+  }
+  droneFilt.frequency.value=460; droneFilt.Q.value=.7;
+  var fs=[73.42,110.0,146.83,220.0,293.66], gs=[.62,.44,.30,.13,.05], dt=[0,4,-3,6,-5];
+  for(var i=0;i<fs.length;i++){
+    var o=A.createOscillator(); o.type=i<2?'sine':'triangle';
+    o.frequency.value=fs[i]; o.detune.value=dt[i];
+    var g=A.createGain(); g.gain.value=gs[i];
+    o.connect(g); g.connect(droneFilt); o.start(); drone.push(o);
+    if(i<3){
+      var o2=A.createOscillator(); o2.type='sine';
+      o2.frequency.value=fs[i]; o2.detune.value=dt[i]+(i%2?7:-7);
+      var g2=A.createGain(); g2.gain.value=gs[i]*0.55;
+      o2.connect(g2); g2.connect(droneFilt); o2.start(); drone.push(o2);
+    }
+  }
+  droneGain.gain.setTargetAtTime(.205, A.currentTime, 2.2);
+}
+function stopBed(){
+  if(!drone) return;
+  var t=A.currentTime;
+  droneGain.gain.cancelScheduledValues(t);
+  droneGain.gain.setValueAtTime(droneGain.gain.value,t);
+  droneGain.gain.linearRampToValueAtTime(0.0001, t+0.45);
+  var d=drone; drone=null; ana=null;
+  setTimeout(function(){
+    for(var i=0;i<d.length;i++){ try{ d[i].stop(); }catch(e){} }
+  }, 600);
+}
+
+/* ------------------------------------------------- measuring the bed */
+/* The whole point. The old cue was a fixed fraction of the main cue's
+   amplitude, so it was buried under shruti and stuck out over silence.
+   This reads the bed's actual RMS and places the cue a chosen number of
+   decibels above whatever is really there. */
+var bedRms=0;
+function measure(){
+  if(!ana){ bedRms = 0; return; }
+  ana.getFloatTimeDomainData(anaBuf);
+  var s=0,i;
+  for(i=0;i<anaBuf.length;i++) s += anaBuf[i]*anaBuf[i];
+  var r=Math.sqrt(s/anaBuf.length);
+  bedRms = bedRms*0.72 + r*0.28;         /* smooth, so one transient cannot swing it */
+}
+/* With no bed at all there is nothing to sit above, so fall back to a quiet
+   absolute floor rather than dividing by zero and shrieking. */
+var FLOOR = 0.010;
+function cueAmp(){
+  var base = Math.max(bedRms, FLOOR);
+  return Math.min(0.60, base * Math.pow(10, prom/20));
+}
+
+/* ============================== THE CANDIDATES ==============================
+   All noise. None has a fundamental, so none can be masked by, or beat
+   against, anything in the bed.
+   ========================================================================= */
+function env(g, t, a, d, peak){
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0002,peak), t+a);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+a+d);
+}
+function noiseSrc(rate){
+  var s=A.createBufferSource(); s.buffer=noiseBuf; s.loop=true;
+  if(rate) s.playbackRate.value=rate;
+  return s;
+}
+function toVerb(node, amt){
+  var v=A.createGain(); v.gain.value=amt; node.connect(v); v.connect(A.verbIn);
+}
+
+var CUES = {
+  /* seeds in a gourd: a burst of grains, bright, gone in a blink */
+  shaker: function(amp){
+    var t=A.currentTime, n=13;
+    var bp=A.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=4200; bp.Q.value=1.1;
+    var out=A.createGain(); out.gain.value=amp*1.5;
+    bp.connect(out); out.connect(master); toVerb(out, 0.16);
+    for(var i=0;i<n;i++){
+      var d=i*(0.0042+Math.random()*0.0045);
+      var s=noiseSrc(0.9+Math.random()*0.5);
+      var g=A.createGain();
+      var pk = (1 - i/n)*(0.55+Math.random()*0.45);
+      g.gain.setValueAtTime(0.0001, t+d);
+      g.gain.exponentialRampToValueAtTime(pk, t+d+0.0012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+d+0.020);
+      s.connect(g); g.connect(bp); s.start(t+d); s.stop(t+d+0.05);
+    }
+  },
+  /* a brush drawn once across a drum head: no attack to speak of */
+  brush: function(amp){
+    var t=A.currentTime;
+    var s=noiseSrc(0.7);
+    var bp=A.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1500; bp.Q.value=0.7;
+    bp.frequency.setValueAtTime(1100,t);
+    bp.frequency.exponentialRampToValueAtTime(2600, t+0.34);
+    var g=A.createGain();
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(amp*1.15, t+0.15);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+0.55);
+    s.connect(bp); bp.connect(g); g.connect(master); toVerb(g,0.28);
+    s.start(t); s.stop(t+0.7);
+  },
+  /* fingertip on a wooden rim — short enough that the ear reads texture, not pitch */
+  tap: function(amp){
+    var t=A.currentTime;
+    var s=noiseSrc(1.0);
+    var bp=A.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=900; bp.Q.value=5.5;
+    var bp2=A.createBiquadFilter(); bp2.type='bandpass'; bp2.frequency.value=2400; bp2.Q.value=3.0;
+    var g2=A.createGain(); g2.gain.value=0.45;
+    var g=A.createGain();
+    env(g, t, 0.003, 0.075, amp*1.3);
+    s.connect(bp); bp.connect(g);
+    s.connect(bp2); bp2.connect(g2); g2.connect(g);
+    g.connect(master); toVerb(g,0.22);
+    s.start(t); s.stop(t+0.15);
+  },
+  /* the sound the app is already about: a soft unvoiced consonant */
+  breath: function(amp){
+    var t=A.currentTime;
+    var s=noiseSrc(1.2);
+    var hp=A.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=3000;
+    var bp=A.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=6000; bp.Q.value=0.6;
+    var g=A.createGain();
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(amp*1.7, t+0.045);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+0.30);
+    s.connect(hp); hp.connect(bp); bp.connect(g); g.connect(master); toVerb(g,0.14);
+    s.start(t); s.stop(t+0.4);
+  },
+  /* two drops, a beat apart — reads as an event without reading as a note */
+  drops: function(amp){
+    var t=A.currentTime, offs=[0, 0.085];
+    for(var i=0;i<offs.length;i++){
+      var s=noiseSrc(1.4);
+      var bp=A.createBiquadFilter(); bp.type='bandpass';
+      bp.frequency.setValueAtTime(2600 - i*700, t+offs[i]);
+      bp.frequency.exponentialRampToValueAtTime(1400 - i*400, t+offs[i]+0.05);
+      bp.Q.value=7;
+      var g=A.createGain();
+      env(g, t+offs[i], 0.002, 0.055, amp*(i?0.55:1.0)*1.4);
+      s.connect(bp); bp.connect(g); g.connect(master); toVerb(g,0.30);
+      s.start(t+offs[i]); s.stop(t+offs[i]+0.12);
+    }
+  },
+  /* what is in the app today, for comparison — a struck glass bowl at 349 Hz */
+  bell: function(amp){
+    var t=A.currentTime;
+    var P=[1,2.005,3.99,6.02], G=[1,.22,.085,.035], D=[1,.82,.62,.44], B=[.35,.7,1.0,1.4];
+    var f0=349.23;
+    var out=A.createGain(); out.gain.value=amp*1.1; out.connect(master); toVerb(out,0.30);
+    for(var i=0;i<P.length;i++){
+      for(var v=0;v<2;v++){
+        var o=A.createOscillator(); o.type='sine';
+        o.frequency.value=f0*P[i]+(v?1:-1)*(B[i]/2);
+        var g=A.createGain();
+        var dec=Math.max(0.4, 1.25*D[i]);
+        g.gain.setValueAtTime(0.0001,t);
+        g.gain.exponentialRampToValueAtTime(G[i]*0.5, t+0.05+i*0.025);
+        g.gain.exponentialRampToValueAtTime(0.0001, t+dec);
+        o.connect(g); g.connect(out); o.start(t); o.stop(t+dec+0.25);
+      }
+    }
+  }
+};
+
+var CUE_META = [
+  ['shaker','Shaker','seeds in a gourd'],
+  ['brush', 'Brush', 'no attack at all'],
+  ['tap',   'Tap',   'wooden rim'],
+  ['breath','Breath','a soft consonant'],
+  ['drops', 'Drops', 'two, a beat apart'],
+  ['bell',  'Bell',  'what ships today']
+];
+var BED_META = [
+  ['shruti','Shruti','densest — the hard case'],
+  ['drone', 'Thrum', 'the default'],
+  ['rain',  'Rain',  'broadband noise'],
+  ['off',   'None',  'the other hard case']
+];
+
+/* ------------------------------------------------------------------- ui */
+function chips(host, meta, cur, set){
+  host.innerHTML='';
+  meta.forEach(function(m){
+    var b=document.createElement('button');
+    b.className='opt'+(m[0]===cur?' on':'');
+    b.innerHTML=m[1]+'<small>'+m[2]+'</small>';
+    b.onclick=function(){ set(m[0]); };
+    host.appendChild(b);
+  });
+}
+var elBeds=document.getElementById('beds'), elCues=document.getElementById('cues');
+function drawBeds(){ chips(elBeds, BED_META, bed, function(v){
+  bed=v; drawBeds();
+  if(running){ stopBed(); setTimeout(function(){ if(running) startBed(); }, 700); }
+}); }
+function drawCues(){ chips(elCues, CUE_META, cueId, function(v){ cueId=v; drawCues(); fire(); }); }
+drawBeds(); drawCues();
+
+var elProm=document.getElementById('prom'), elVol=document.getElementById('vol');
+elProm.oninput=function(){ prom=+this.value;
+  document.getElementById('lProm').textContent=(prom>=0?'+':'')+prom+' dB'; };
+elVol.oninput=function(){ vol=this.value/100;
+  document.getElementById('lVol').textContent=this.value+'%';
+  if(master) master.gain.setTargetAtTime(vol, A.currentTime, 0.05); };
+
+function fire(){
+  if(!A) return;
+  var f=CUES[cueId]; if(f) f(cueAmp());
+}
+var elGo=document.getElementById('go');
+elGo.onclick=function(){
+  init();
+  if(running){
+    running=false; clearInterval(timer); timer=null; stopBed();
+    elGo.textContent='Start — cue every 4s'; elGo.className='';
+    document.getElementById('mNote').textContent='stopped';
+  } else {
+    running=true; startBed();
+    elGo.textContent='Stop'; elGo.className='on';
+    document.getElementById('mNote').textContent =
+      'the cue fires every 4 seconds — change cue or bed while it runs';
+    setTimeout(fire, 900);
+    timer=setInterval(fire, 4000);
+  }
+};
+
+/* the readout, so the number that works is written down and not just felt */
+var mBed=document.getElementById('mBed'), mGain=document.getElementById('mGain'),
+    barIn=document.getElementById('barIn');
+function db(x){ return x<=1e-6 ? '−∞' : (20*Math.log10(x)).toFixed(1); }
+setInterval(function(){
+  if(!A || !running) return;
+  measure();
+  var a=cueAmp();
+  mBed.textContent  = db(bedRms)+' dBFS';
+  mGain.textContent = db(a)+' dBFS';
+  barIn.style.width = Math.min(100, Math.max(0, (60+ +db(bedRms))*1.9))+'%';
+}, 120);
+
+})();
+</script>
+
+</body>
+</html>
