@@ -2,6 +2,39 @@
 
 Newest first. Dates are when the change landed in the repo.
 
+## 2026-09-29 — Real jellyfish, behind the drawn one
+
+Patrick found footage he shot of sea nettles and moon jellies. It is now the
+background of a session, with the canvas companion still breathing on top.
+
+**It runs free, deliberately.** Measured, an unsynchronised clip drifts about
+1% of elapsed time — 7 seconds over a twelve-minute session, most of a breath,
+enough that the bell would end up contracting on the inhale. A control loop
+nudging `playbackRate` held it to 0.08s indefinitely and worked fine. We chose
+not to use it. The companion above is already exactly in phase and is the
+pacer; two things claiming that job is worse than one, and an animal that
+contracted precisely on every exhale for twelve minutes would stop reading as
+alive. The independence is the point. This only holds while the footage stays
+*behind* and dim — brought forward it becomes the pacer again by default, an
+unsynchronised one.
+
+**Graded into the palette rather than used as shot.** The footage is 53.6%
+blue by mean channel energy, which is the wavelength melanopsin answers to and
+the whole reason Sleep runs amber. Pulled down, with the water pushed toward
+plum and the jellies left warm, it measures 22.7% — about where the app's own
+amber accent sits (21.3%). A first attempt flattened it to a duotone and was
+awful; the blue negative space is what holds the animals apart.
+
+**It fades back after the first minute.** Nobody watches a screen for twelve
+minutes — you settle in and then follow the audio. So it rises over four
+seconds, holds while you are settling, and then eases from 55% to 26% opacity
+over the following minute. Pausing fades it out and stops the decoder; ending
+the session removes it entirely. Settings &rarr; Footage turns it off, which
+also skips the decode.
+
+Slowed 2.25x with motion interpolation, one 20-second loop, 1.2 MB inlined.
+The app is now 1.66 MB. **New standing rule: keep it under 2 MB.**
+
 ## 2026-09-09 — Rain that has rain in it
 
 The rain background sounded like wind because it was wind. It was two bands of

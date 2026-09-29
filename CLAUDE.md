@@ -163,6 +163,36 @@ fundamental, so only the level is left, and `bedLevel()` measures that off an
 tone without re-reading this paragraph; the beds differ by 11 dB, and the
 thrum is the loud one, not the shruti.
 
+## The footage is the world, not the pacer
+
+`#reef` is real jellyfish, graded and slowed, sitting inside `#stage` *behind*
+the canvas. It runs free — no attempt is made to lock it to the breath, and
+that is a decision rather than an omission. A free clip drifts about 1% of
+elapsed time, which over a session is most of a breath; a `playbackRate`
+control loop fixes that and was tested and rejected. The companion on the
+canvas above is already exactly in phase and is the pacer. Two things claiming
+that job is worse than one, and an animal contracting precisely on every
+exhale for twelve minutes stops reading as alive.
+
+That reasoning depends on the footage staying **behind and dim**. Bring it
+forward and it becomes the pacer again by default, an unsynchronised one. The
+opacity schedule in `reefFrame()` — up over four seconds, hold, then ease from
+0.55 to 0.26 — exists because nobody watches the screen for a whole session:
+you settle in and then follow the audio.
+
+Any new footage must be graded first. As shot this material is 53.6% blue by
+mean channel energy, right at melanopsin's peak and the exact hue the Sleep
+palette avoids; the channel mixer in `CHANGELOG` brings it to 22.7%, about
+where the amber accent sits. Do not skip that step, and do not flatten it to a
+duotone — the blue negative space is what separates the animals.
+
+## The sources are gone, and index.html is the truth
+
+The `_*.js` files and `build2.py` that once assembled this app lived only in a
+scratch container and were never committed. They no longer exist. That is no
+loss: `index.html` **is** the application, exactly as the top of this file
+says. Edit it directly. If a build step is ever reintroduced, commit it.
+
 ## Safety content is not decoration
 
 The dive tables carry a warning about hypoxic blackout and about
