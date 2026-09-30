@@ -78,39 +78,50 @@ try {
 
    Short names in separate files are not separate. This checks.
    ------------------------------------------------------------------ */
-const SRC = ['_patterns.js','_state.js','_audio.js','_glyph.js',
-             '_vis_keep.js','_vis_new.js','_ui.js'];
-const seen = new Map();
+/* The sources this once scanned (_state.js, _ui.js ...) were never committed
+   and no longer exist, so this check was passing without looking at anything.
+   It now reads the shipped inline script itself, which is the only thing that
+   can actually contain the bug: TIMBRES and BEDS were each declared twice in
+   one scope and nothing noticed. */
 const clashes = [];
-for(const f of SRC){
-  const full = join(ROOT, f);
-  let text; try{ text = readFileSync(full,'utf8'); }catch{ continue; }
-  const names = new Set();
-  /* Only real top-level declarations count. A name assigned from another file
-     is usually deliberate shared state; a name DECLARED twice is the hazard,
-     because the second `var` silently takes over the first one's value. */
-  for(const m of text.matchAll(/^(?:var|let|const)\s+([^;\n]*(?:\n\s{4,}[^;\n]*)*)/gm)){
+{
+  const body = script ? script[1] : '';
+  const seen = new Map();
+  const add = n => {
+    const c = (seen.get(n) || 0) + 1;
+    seen.set(n, c);
+    if (c > 1) clashes.push(`${n}  (declared ${c} times)`);
+  };
+  /* Take only the first physical line of each declaration. A first attempt
+     tried to parse the whole initializer and silently recorded nothing for
+     `var BEDS = [` — the bracket opens and never closes on that line, so the
+     depth counter never returned to zero. Names declared on continuation
+     lines are not seen; that is a known gap, not a claim of completeness. */
+  for (const m of body.matchAll(/^(?:var|let|const)\s+(.*)$/gm)) {
+    /* names declared by THIS statement, deduped only within it — a global
+       "skip if already seen" is what made the first version blind to the very
+       duplicates it was written to find */
+    const here = new Set();
     let depth = 0, cur = '';
-    for(const ch of m[1] + ','){
-      if('([{'.includes(ch)) depth++;
-      else if(')]}'.includes(ch)) depth--;
-      if(ch === ',' && depth === 0){
+    for (const ch of m[1] + ',') {
+      if ('([{'.includes(ch)) depth++;
+      else if (')]}'.includes(ch)) depth--;
+      if (ch === ',' && depth === 0) {
         const id = cur.trim().split('=')[0].trim();
-        if(/^[A-Za-z_$][\w$]*$/.test(id)) names.add(id);
+        if (/^[A-Za-z_$][\w$]*$/.test(id)) here.add(id);
         cur = '';
       } else cur += ch;
     }
+    const first = m[1].trim().split(/[=,;\s]/)[0];
+    if (/^[A-Za-z_$][\w$]*$/.test(first)) here.add(first);
+    here.forEach(add);
   }
-  for(const m of text.matchAll(/^function\s+([A-Za-z_$][\w$]*)/gm)) names.add(m[1]);
-  for(const n of names){
-    if(seen.has(n) && seen.get(n) !== f) clashes.push(`${n}  (${seen.get(n)} and ${f})`);
-    else seen.set(n, f);
-  }
+  for (const m of body.matchAll(/^function\s+([A-Za-z_$][\w$]*)/gm)) add(m[1]);
 }
 if(clashes.length){
-  fail('top-level names declared in more than one file — they share one scope:\n      ' +
-       clashes.join('\n      '));
-} else pass('no top-level name collisions between modules');
+  fail('a top-level name is declared more than once in the inline script:\n      ' +
+       [...new Set(clashes)].join('\n      '));
+} else pass('no duplicate top-level declarations');
 
 if (!process.exitCode) 
 console.log('\nAll checks passed.');

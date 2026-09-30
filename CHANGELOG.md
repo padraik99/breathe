@@ -2,6 +2,94 @@
 
 Newest first. Dates are when the change landed in the repo.
 
+## 2026-09-30 — Settings from a pause
+
+A pause is usually a pause *for* something — most often to change a voice. That
+needed ending the session, which was a silly price. The session chrome now
+carries a third pill, **Resume · Settings · End**, and Settings appears only
+while paused.
+
+Deliberately only while paused: changing a voice mid-breath means fiddling
+while the clock runs, and pausing first is the honest gesture — and the one
+being made anyway.
+
+Three things had to be taught about the pause:
+
+- Auditioning a **background** used to leave it playing, because the audition
+  only switches itself off again when no session is running. It now treats a
+  paused session the same way.
+- Swapping a **companion** while paused no longer starts the film immediately;
+  resuming puts it back on screen.
+- The clock still forgets the whole detour. A session with settings changed
+  part-way through finishes at its proper length.
+
+Verified by pausing, changing companion, background and voice in one visit,
+closing the sheet and resuming: the film comes back playing, all three
+settings persist, and the session runs to completion.
+
+## 2026-09-30 — Eight companions
+
+Four new ones, no barrier to entry on any of them.
+
+- **Nettles** and **Moon** — both films, graded and slowed, each its own
+  species. Only the chosen one is ever given a decoder; switching stops the
+  other. Each session opens at a random point in the loop, so two nights never
+  start on the same frame.
+- **Dissolve** and **Filigree** — the two Julia sets picked out of the
+  September study, which had been archived and then forgotten. Dissolve moves
+  c across the edge of the period-2 bulb with the breath: inhale and the set is
+  connected, one body; exhale and c leaves the bulb and it shatters into dust.
+  Filigree hovers at the golden-mean Siegel point, the most intricate boundary
+  in the family — it never breaks apart, the breath only opens and closes the
+  lace.
+
+The `--tint` wash is suppressed for the fractals. It exists to warm a drawn
+creature toward the category accent, and at 46% over a full-screen render it
+would have flooded the palette those sets are already built in.
+
+Measured at device-pixel-ratio 2.5 with no GPU at all:
+
+```
+  reef 61   moon 61   dissolve 45   filigree 45
+  jelly 45  aurora 29  ink 43       bloom 60
+```
+
+The fractals cost exactly what Drifter costs and rather less than Aurora, which
+remains the slowest thing in the app.
+
+**Size.** Both films re-cut to about 13.5 seconds at 20fps — slow organic
+motion does not need 30, and it buys a third. Two films now cost less than the
+single longer one did: **1.56 MB**, under the 2 MB rule with room to spare.
+
+## 2026-09-30 — The footage is a companion, the bell is gone
+
+- **Nettles is a companion now**, first in the list, not a layer behind one.
+  Choosing it means the canvas draws no creature; the elapsed ring around it
+  still breathes, so the pacing survives the drawn jellyfish leaving. Picking
+  any other companion stops the decoder.
+- **The pitched bell cue is cut.** Three versions of it failed and the last
+  failed for a reason tuning cannot reach: a sound arriving out of nowhere
+  makes you flinch, where a steady pulse gives you something to ride. Stored
+  settings that still say `bell` migrate to Drops on load.
+- **The metronome is a maraca.** It was a 1240 Hz chirp, which is a machine
+  counting. It is now eleven grains bunched at the front and thinning out over
+  about fifteen milliseconds — seeds hitting a gourd wall. Quieter and tighter
+  than the shaker cue, because this one repeats sixty times a minute.
+
+**Fixed: `TIMBRES` and `BEDS` were each declared twice** in the one scope the
+app actually runs in — leftovers from when the file was assembled from parts.
+Harmless today because the two copies were identical, but editing the first
+would have done nothing at all.
+
+**And the guard that should have caught that was checking nothing.** It scanned
+`_*.js` files that no longer exist, so it passed by finding no files. Pointed
+at the shipped inline script instead. It then still missed the duplicate twice
+over: first a bracket-depth parser that recorded nothing for `var BEDS = [`
+because the bracket never closes on that line, then a `!seen.has(name)` guard
+that skipped a name *because* it had been seen before — which is the whole
+condition being tested. Both fixed, and verified by reintroducing a duplicate
+and watching the gate reject it.
+
 ## 2026-09-29 — Real jellyfish, behind the drawn one
 
 Patrick found footage he shot of sea nettles and moon jellies. It is now the

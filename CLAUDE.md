@@ -163,22 +163,31 @@ fundamental, so only the level is left, and `bedLevel()` measures that off an
 tone without re-reading this paragraph; the beds differ by 11 dB, and the
 thrum is the loud one, not the shruti.
 
-## The footage is the world, not the pacer
+## The films, and the fractals
 
-`#reef` is real jellyfish, graded and slowed, sitting inside `#stage` *behind*
-the canvas. It runs free — no attempt is made to lock it to the breath, and
-that is a decision rather than an omission. A free clip drifts about 1% of
-elapsed time, which over a session is most of a breath; a `playbackRate`
-control loop fixes that and was tested and rejected. The companion on the
-canvas above is already exactly in phase and is the pacer. Two things claiming
-that job is worse than one, and an animal contracting precisely on every
-exhale for twelve minutes stops reading as alive.
+`#reef` and `#moon` are real jellyfish, graded and slowed — two species, both
+choices in `VIS_META`, not layers behind anything. When one is selected the
+canvas draws nothing (`VIS.reef` and `VIS.moon` are no-ops) and the film is the
+subject. `isFilm()` and `film()` decide which; only the selected one is ever
+given a decoder, because two decoding at once is wasted battery.
 
-That reasoning depends on the footage staying **behind and dim**. Bring it
-forward and it becomes the pacer again by default, an unsynchronised one. The
-opacity schedule in `reefFrame()` — up over four seconds, hold, then ease from
-0.55 to 0.26 — exists because nobody watches the screen for a whole session:
-you settle in and then follow the audio.
+**Dissolve** and **Filigree** are escape-time Julia sets, ported from the
+September study. `juliaPaint()` renders into a buffer at 35% of the screen and
+upscales once with `imageSmoothingQuality='low'` — bilinear is both cheaper and
+blurrier, which is the look. The mathematics costs about 0.4 ms a frame; an
+earlier build spent 111 ms a frame upscaling at 'high' three times over. Do not
+"improve" the blit.
+
+`isFractal()` suppresses the `--tint` wash for them. That wash warms a *drawn*
+creature toward the category accent; at 46% over a full-screen render it floods
+the palette the sets are already built in.
+
+It runs free: no attempt is made to lock it to the breath. A free clip drifts
+about 1% of elapsed time, which over a session is most of a breath; a
+`playbackRate` control loop fixes that, was built and measured, and was
+rejected. An animal contracting precisely on every exhale for twelve minutes
+stops reading as alive. The pacing does not depend on it — the elapsed ring
+thickens and brightens with the lungs and is still drawn over the footage.
 
 Any new footage must be graded first. As shot this material is 53.6% blue by
 mean channel energy, right at melanopsin's peak and the exact hue the Sleep
@@ -192,6 +201,30 @@ The `_*.js` files and `build2.py` that once assembled this app lived only in a
 scratch container and were never committed. They no longer exist. That is no
 loss: `index.html` **is** the application, exactly as the top of this file
 says. Edit it directly. If a build step is ever reintroduced, commit it.
+
+They left a mess behind: `TIMBRES` and `BEDS` were each declared twice in the
+one scope, because two of the old parts both defined them. Identical copies,
+so nothing broke — but an edit to the first would have vanished. `check.mjs`
+now reads the shipped inline script for duplicate top-level declarations, and
+that check took three attempts to actually work: it scanned files that no
+longer existed, then a bracket-depth parser recorded nothing for `var X = [`,
+then a `!seen.has(name)` test skipped names *because* they had been seen. A
+guard is worthless until you have watched it fail on the bug it is for.
+
+## Settings is reachable from a pause, and only from a pause
+
+`#setBtn` lives in the session chrome and is shown by `#chrome.paused`. Anything
+the settings sheet does mid-session has to account for `paused` being true as
+well as `running`:
+
+- the background audition schedules its own `stopDrone` on `!running || paused`,
+  or a paused session sits there playing a bed;
+- swapping a companion calls `reefStart()` only when `running && !paused`, and
+  `setPaused(false)` puts the film back on screen if it is not already there.
+
+If you add a control that previews something, check it against a paused session
+as well as the home screen. Those are two different states and only one of them
+is obvious.
 
 ## Safety content is not decoration
 
