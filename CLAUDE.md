@@ -163,6 +163,20 @@ fundamental, so only the level is left, and `bedLevel()` measures that off an
 tone without re-reading this paragraph; the beds differ by 11 dB, and the
 thrum is the loud one, not the shruti.
 
+## The Drifter is drawn, and should stay drawn
+
+Its bell is built from two independent beziers meeting across a short flat
+crown — not one curve mirrored, which is what made it read as a half-circle.
+Shape notes taken from the footage: about 1.5:1 wide to tall, seventeen small
+uneven lappets, a darker margin band, thirteen radial canals fanning from
+across the crown rather than one vertex, and a slow idle tilt because a real
+bell is never square to the camera.
+
+Do not chase photorealism with it. The Nettles film will always win that, and
+the drawing earns its place by doing the thing film cannot — breathing exactly
+in phase with the session. If it ever stops being worth its code, cut it; the
+film covers the role.
+
 ## The films, and the fractals
 
 `#reef` and `#moon` are real jellyfish, graded and slowed — two species, both

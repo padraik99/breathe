@@ -2,6 +2,45 @@
 
 Newest first. Dates are when the change landed in the repo.
 
+## 2026-10-05 — Longer loops, and a bell that is not a half-circle
+
+**Both films run 21 seconds**, up from 13.5 — and the app got barely bigger,
+because the bitrate could come down to meet it. Measured against a near-lossless
+reference of the same cut:
+
+```
+  bitrate   size    inlined   SSIM
+    240k    598K      797K    0.9842
+    300k    749K      998K    0.9866
+    360k    901K      1.2M    0.9881
+    440k    1.1M      1.5M    0.9895
+```
+
+Nearly doubling the bitrate buys half a percent of SSIM. Dark, soft, slow
+footage compresses extremely well, so 240k it is. Two 21-second loops come to
+**1.69 MB** all in, still inside the 2 MB rule.
+
+**The Drifter's bell was a perfect dome**, mirrored about its centre line, which
+is exactly what a sea nettle is not. Rebuilt against the footage:
+
+- **Flattened.** The reference bells run about 1.5:1 wide to tall; this was
+  1.24:1, which is most of why it read as a half-circle.
+- **Two independent sides.** Each shoulder has its own control points driven by
+  slow noise, and the crown drifts laterally, so the halves never agree.
+- **Seventeen small lappets** of uneven depth instead of seven even scallops.
+- **A darker margin band and thirteen radial canals**, both plainly visible in
+  the footage and both previously absent.
+- **An idle tilt.** In the footage a bell is essentially never square to the
+  camera; it is now rarely level.
+
+Two passes were needed. The first had the sides meeting at a point, which gave
+it an umbrella spine, with every canal converging on the same vertex. The sides
+now meet across a short flat crown with the control points held at the crown's
+own height, so the tangent is horizontal and there is no corner.
+
+It stays in the list. The film is more real than a drawing will ever be, but
+the drawing does the one thing the film cannot: it breathes exactly with you.
+
 ## 2026-09-30 — Settings from a pause
 
 A pause is usually a pause *for* something — most often to change a voice. That
