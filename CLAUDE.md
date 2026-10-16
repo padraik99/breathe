@@ -203,11 +203,23 @@ rejected. An animal contracting precisely on every exhale for twelve minutes
 stops reading as alive. The pacing does not depend on it — the elapsed ring
 thickens and brightens with the lungs and is still drawn over the footage.
 
-Any new footage must be graded first. As shot this material is 53.6% blue by
-mean channel energy, right at melanopsin's peak and the exact hue the Sleep
-palette avoids; the channel mixer in `CHANGELOG` brings it to 22.7%, about
-where the amber accent sits. Do not skip that step, and do not flatten it to a
-duotone — the blue negative space is what separates the animals.
+Footage shot in blue water must be graded. The nettles were 53.6% blue by
+share of frame, right at melanopsin's peak and the exact hue the Sleep palette
+avoids; the channel mixer in `CHANGELOG` brings them to 22.7%. Do not skip it,
+and do not flatten to a duotone — the blue negative space separates the
+animals.
+
+**But judge it by absolute blue, not by share of frame.** Share is meaningless
+on a near-black image. Ember is 49.7% blue by share and ships ungraded, because
+its blue channel averages 11/255 against the graded nettles' 25 and the
+ungraded nettles' 142. A dark red animal on black emits less blue light than a
+dimmed blue one, whatever the ratio says. Measure the channel mean, not the
+proportion.
+
+`#ember` is also the one clip built from two passages: its source cycles its
+lighting red to blue over about sixteen seconds, so the two red runs are
+crossfaded together and the tail folded back over the head. If it is ever
+recut, keep it out of the blue half — that half is both dim and the wrong hue.
 
 ## The sources are gone, and index.html is the truth
 

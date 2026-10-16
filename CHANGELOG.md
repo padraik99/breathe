@@ -2,6 +2,43 @@
 
 Newest first. Dates are when the change landed in the repo.
 
+## 2026-10-15 — Ember, and why it did not need grading
+
+A third film: a single jelly lit against black, red-magenta, pulsing. Named
+Ember because nobody knows what it is.
+
+**It ships ungraded, deliberately, and the evidence agrees with the
+aesthetics for once.** The rule in this file says footage must be graded
+because the nettles were 53.6% blue by share of frame. That measure is
+misleading on a near-black image. What reaches the eye is *absolute* level:
+
+```
+  blue channel mean, out of 255
+    nettles, as shot        142
+    nettles, graded          25
+    Ember, as shot           14
+    Ember, as shipped        11   (after a brightness and saturation lift)
+```
+
+Ember emits less blue than our already-graded nettles, before any grading at
+all — because the frame is mostly black and the animal is red, which is about
+as far from melanopsin's peak as visible light gets. So it keeps its colour,
+and gains a lift: brightness +0.035, saturation 1.30, contrast 1.08.
+
+**Built from the two red passages.** The source cycles its lighting red to blue
+and back over about sixteen seconds, and the blue half is both dim and the
+wrong hue. The two red runs — 1.5-7.1s and 17-24s — are joined with a one
+second crossfade, then the tail is folded back over the head with another, so
+the loop has no seam and no lighting jump. 18 seconds, slowed 1.6x.
+
+Dark frames compress extraordinarily well: at 150k this clip measured SSIM
+0.9928, better than the nettles manage at 240k. It ships at 200k for headroom
+and still costs only 439 KB.
+
+**The app is now 2.26 MB and the 2 MB rule is broken.** Said plainly rather
+than quietly. Three films, four drawn companions, two fractals. The new
+ceiling is 2.5 MB.
+
 ## 2026-10-05 — Longer loops, and a bell that is not a half-circle
 
 **Both films run 21 seconds**, up from 13.5 — and the app got barely bigger,
