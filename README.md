@@ -13,7 +13,7 @@ Dive — which makes a wrong-mode mistake visible from across the room.
 
 ## Live
 
-**https://padra.github.io/breathe/** *(enable GitHub Pages on `main` / root)*
+**https://padraik99.github.io/breathe/**
 
 On iPhone: open in Safari → Share → **Add to Home Screen**.
 
